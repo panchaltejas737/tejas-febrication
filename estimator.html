@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Measurement & Price Estimator — Tejas Fabrication</title>
+    <meta name="description"
+        content="Use our interactive stepped cost estimator wizard to calculate your fabrication project dimensions and get instant price ranges.">
+    <meta name="keywords"
+        content="metal fabrication, cost calculator, estimator, iron gates price, steel railing calculator, roof shed cost">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Gujarati:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Reading Progress Bar -->
+    <div id="readingProgress"></div>
+
+    <!-- Header Navigation -->
+    <header class="main-header" id="header">
+        <div class="container header-container">
+            <a href="/" class="logo">
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 22H22L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                    <path d="M12 8L7 18H17L12 8Z" fill="currentColor" />
+                    <path d="M3 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <div class="logo-text">
+                    <span class="brand-name" data-key="hero_title">Tejas Fabrication</span>
+                    <span class="brand-sub" data-key="logo_sub">Metal Craftsmanship</span>
+                </div>
+            </a>
+
+            <nav class="nav-menu" id="navMenu">
+                <ul>
+                    <li><a href="/" class="nav-link" data-key="nav_home">Home</a></li>
+                    <li><a href="/about" class="nav-link" data-key="nav_about">About Us</a></li>
+                    <li><a href="/services" class="nav-link" data-key="nav_services">Services</a></li>
+                    <li><a href="/gallery" class="nav-link" data-key="nav_gallery">Gallery</a></li>
+                    <li><a href="/estimator" class="nav-link" data-key="nav_estimator">Estimator</a></li>
+                    <li><a href="/contact" class="nav-link" data-key="nav_contact">Contact Us</a></li>
+                </ul>
+            </nav>
+
+            <div class="nav-actions">
+                <button class="lang-toggle-btn" id="langToggle" aria-label="Switch Language">
+                    <span class="lang-text-en">EN</span>
+                    <span class="lang-divider">/</span>
+                    <span class="lang-text-gu">ગુજરાતી</span>
+                </button>
+                <a href="tel:+917226833799" class="btn btn-primary btn-sm header-call-btn">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                        <path
+                            d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.57a1 1 0 0 0-1.01.24l-2.2 2.2a15.045 15.045 0 0 1-6.59-6.59l2.2-2.21a.96.96 0 0 0 .25-1A11.36 11.36 0 0 1 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1z" />
+                    </svg>
+                    <span data-key="nav_call_btn">+91 72268 33799</span>
+                </a>
+                <button class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle Menu">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Subpage Hero Section -->
+    <section class="subpage-hero">
+        <div class="container">
+            <h1 class="subpage-title" data-key="nav_estimator">Estimator</h1>
+            <p class="subpage-subtitle" data-key="est_subtitle">Select work type, enter size details to get an estimated cost instantly.</p>
+        </div>
+    </section>
+
+    <!-- Interactive Stepped Estimator Section -->
+    <section class="estimator-stepped-section" style="padding: 80px 0; background: var(--bg-darker);">
+        <div class="container" style="max-width: 900px;">
+            
+            <div class="wizard-card" id="estimatorWizard">
+                <!-- Step Indicators -->
+                <div class="steps-indicator">
+                    <div class="step-dot active" data-step="0">1</div>
+                    <div class="step-dot" data-step="1">2</div>
+                    <div class="step-dot" data-step="2">3</div>
+                    <div class="step-dot" data-step="3">4</div>
+                </div>
+
+                <!-- STEP 1: Categories & Material Grades -->
+                <div class="wizard-step-content active">
+                    <div class="wizard-header text-center">
+                        <h2 style="font-size: 1.6rem; margin-bottom: 8px;">Select Work & Material Quality</h2>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">Choose the fabrication type and the steel/iron grade</p>
+                    </div>
+
+                    <h3 style="font-size: 1.1rem; margin-bottom: 15px; font-weight: 600;" data-key="est_cat_label">Select Work Type</h3>
+                    <div class="selection-grid">
+                        <div class="selection-card selected" data-category="gate">
+                            <div class="selection-card-icon">
+                                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                                    <path d="M19 4H5c-1.11 0-2 .9-2 2v12c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-9 14H5V6h5v12zm9 0h-7V6h7v12z"/>
+                                </svg>
+                            </div>
+                            <div class="selection-card-title" data-key="service_gate_title">Gates & Main Doors</div>
+                        </div>
+                        <div class="selection-card" data-category="grill">
+                            <div class="selection-card-icon">
+                                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-8 16H5v-4h6v4zm0-6H5V9h6v4zm0-6H5V5h6v2zm8 12h-6v-4h6v4zm0-6h-6V9h6v4zm0-6h-6V5h6v2z"/>
+                                </svg>
+                            </div>
+                            <div class="selection-card-title" data-key="service_grill_title">Window Safety Grills</div>
+                        </div>
+                        <div class="selection-card" data-category="railing">
+                            <div class="selection-card-icon">
+                                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                                    <path d="M2 17h2v-4H2v4zm4 0h2v-6H6v6zm4 0h2V9h-2v8zm4 0h2V5h-2v12zm4 0h2v-7h-2v7zm4 0h2v-9h-2v9zM2 19h20v2H2v-2z"/>
+                                </svg>
+                            </div>
+                            <div class="selection-card-title" data-key="service_railing_title">Balcony & Stair Railings</div>
+                        </div>
+                        <div class="selection-card" data-category="shed">
+                            <div class="selection-card-icon">
+                                <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                                    <path d="M12 3L2 12h3v8h14v-8h3L12 3zm0 4.85l5 4.5V18H7v-5.65l5-4.5z"/>
+                                </svg>
+                            </div>
+                            <div class="selection-card-title" data-key="service_shed_title">Roof Sheds & Structures</div>
+                        </div>
+                    </div>
+
+                    <h3 style="font-size: 1.1rem; margin-bottom: 15px; font-weight: 600;" data-key="est_quality_label">Material Quality</h3>
+                    <div class="quality-specs-grid">
+                        <div class="selection-card selected" data-quality="standard">
+                            <div class="selection-card-title" data-key="est_qual_std">Standard Iron</div>
+                            <div class="spec-detail-box">
+                                <ul>
+                                    <li>1.5 inch thick structural pipes</li>
+                                    <li>Single anti-rust red oxide coat</li>
+                                    <li>Strong carbon steel alloy</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="selection-card" data-quality="designer">
+                            <div class="selection-card-title" data-key="est_qual_design">Designer Iron</div>
+                            <div class="spec-detail-box">
+                                <ul>
+                                    <li>Decorative laser-cut patterns</li>
+                                    <li>Heavy thickness safety doors</li>
+                                    <li>Double layer weathering primer</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="selection-card" data-quality="stainless">
+                            <div class="selection-card-title" data-key="est_qual_ss">Premium Stainless Steel</div>
+                            <div class="spec-detail-box">
+                                <ul>
+                                    <li>SS 304/316 grade raw materials</li>
+                                    <li>Argon TIG joints (very neat finish)</li>
+                                    <li>Zero rust (suitable for outdoors)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 2: Input Dimensions -->
+                <div class="wizard-step-content">
+                    <div class="wizard-header text-center">
+                        <h2 style="font-size: 1.6rem; margin-bottom: 8px;">Enter Dimensions</h2>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">Input the width and height (or length) of the installation area</p>
+                    </div>
+
+                    <div class="grid grid-2-col" style="align-items: center;">
+                        <div class="dimensions-diagram">
+                            <div class="diagram-box">
+                                <span style="font-size: 0.9rem; font-weight: 700;">Area Frame</span>
+                                <div class="diagram-w" id="diagWidthVal">10 ft</div>
+                                <div class="diagram-h" id="diagHeightVal">6 ft</div>
+                            </div>
+                        </div>
+
+                        <div class="dimensions-inputs">
+                            <div class="form-group">
+                                <label for="wizWidth" data-key="est_width_label">Width (in Feet)</label>
+                                <input type="number" id="wizWidth" value="10" min="1" max="100" step="0.5">
+                            </div>
+                            <div class="form-group" style="margin-top: 20px;">
+                                <label for="wizHeight" data-key="est_height_label">Height / Length (in Feet)</label>
+                                <input type="number" id="wizHeight" value="6" min="1" max="100" step="0.5">
+                            </div>
+                            <div style="margin-top: 20px; font-weight: 600; display: flex; justify-content: space-between;">
+                                <span data-key="est_total_area">Total Area:</span>
+                                <span id="wizAreaVal" style="color: var(--primary);">60 Sq. Ft.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 3: Add-ons Accessories -->
+                <div class="wizard-step-content">
+                    <div class="wizard-header text-center">
+                        <h2 style="font-size: 1.6rem; margin-bottom: 8px;">Custom Add-ons</h2>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">Choose optional extra layers or structural safety accessories</p>
+                    </div>
+
+                    <div class="addons-list">
+                        <!-- Addon 1 -->
+                        <label class="addon-item">
+                            <input type="checkbox" class="addon-checkbox" data-price="40" data-name-key="addon_primer" checked>
+                            <div class="addon-info">
+                                <div class="addon-name" data-key="val_d_title">Zinc Chromate Anti-Rust Primer</div>
+                                <div class="addon-desc">Premium anti-oxidation layer to defend iron from humidity and rain.</div>
+                            </div>
+                            <div class="addon-price">+₹40 / sq.ft</div>
+                        </label>
+                        <!-- Addon 2 -->
+                        <label class="addon-item">
+                            <input type="checkbox" class="addon-checkbox" data-price="30" data-name-key="addon_paint">
+                            <div class="addon-info">
+                                <div class="addon-name">Double Coat Gloss Enamel Paint</div>
+                                <div class="addon-desc">Finished paint coat in Black, Silver, or Gold highlighting for neat aesthetics.</div>
+                            </div>
+                            <div class="addon-price">+₹30 / sq.ft</div>
+                        </label>
+                        <!-- Addon 3 -->
+                        <label class="addon-item">
+                            <input type="checkbox" class="addon-checkbox" data-price="90" data-name-key="addon_lasercut">
+                            <div class="addon-info">
+                                <div class="addon-name">Custom Laser Engraving / Motif</div>
+                                <div class="addon-desc">Available for main gates and safety doors for custom designs.</div>
+                            </div>
+                            <div class="addon-price">+₹90 / sq.ft</div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- STEP 4: Summary Breakdown Report -->
+                <div class="wizard-step-content">
+                    <div class="wizard-header text-center">
+                        <h2 style="font-size: 1.6rem; margin-bottom: 8px;" data-key="est_result_title">Estimated Quotation</h2>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">Review your requirements and estimated price range</p>
+                    </div>
+
+                    <div class="summary-report">
+                        <div class="summary-title">Fabrication Cost Summary</div>
+                        <div class="summary-row">
+                            <span>Work Category:</span>
+                            <span id="sumCategory" style="font-weight: 600;">Gates & Main Doors</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Dimensions:</span>
+                            <span id="sumSize" style="font-weight: 600;">10 x 6 ft (60.0 Sq. Ft.)</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Material Quality:</span>
+                            <span id="sumQuality" style="font-weight: 600;">Standard Iron</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Selected Add-ons:</span>
+                            <span id="sumAddons" style="font-weight: 600; max-width: 300px; text-align: right;">Anti-Rust Primer</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span data-key="est_price_range">Estimated Price:</span>
+                            <span class="summary-price" id="sumPrice">₹18,000 - ₹24,000</span>
+                        </div>
+                    </div>
+                    <p style="text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: 20px;" data-key="est_disclaimer">*Note: This is an approximate estimate. Actual price may vary based on design detail and current steel/iron market rates.</p>
+                </div>
+
+                <!-- Navigation Action Buttons -->
+                <div class="wizard-buttons">
+                    <button class="btn btn-outline" id="wizPrevBtn" style="padding: 10px 24px; visibility: hidden;">Back</button>
+                    <button class="btn btn-primary" id="wizNextBtn" style="padding: 10px 24px;">Next</button>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="container footer-container">
+            <div class="footer-brand">
+                <div class="logo">
+                    <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 22H22L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                        <path d="M12 8L7 18H17L12 8Z" fill="currentColor" />
+                        <path d="M3 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                    <span class="brand-name" data-key="hero_title">Tejas Fabrication</span>
+                </div>
+                <p class="footer-desc" data-key="footer_desc">
+                    Premium custom iron and steel structures built with precision. Safety gates, secure window grills,
+                    designer railings, and heavy roof sheds.
+                </p>
+            </div>
+
+            <div class="footer-links">
+                <h4 class="footer-title" data-key="footer_links_title">Quick Links</h4>
+                <ul>
+                    <li><a href="/" data-key="nav_home">Home</a></li>
+                    <li><a href="/about" data-key="nav_about">About Us</a></li>
+                    <li><a href="/services" data-key="nav_services">Services</a></li>
+                    <li><a href="/gallery" data-key="nav_gallery">Gallery</a></li>
+                    <li><a href="/contact" data-key="nav_contact">Contact Us</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-services">
+                <h4 class="footer-title" data-key="footer_srv_title">Our Services</h4>
+                <ul>
+                    <li><a href="/services" data-key="service_gate_title">Gates & Main Doors</a></li>
+                    <li><a href="/services" data-key="service_grill_title">Window Safety Grills</a></li>
+                    <li><a href="/services" data-key="service_railing_title">Balcony & Stair Railings</a></li>
+                    <li><a href="/services" data-key="service_shed_title">Roof Sheds & Structures</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom text-center">
+            <div class="container">
+                <p class="copyright" data-key="footer_copyright">© 2026 Tejas Fabrication. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scroll to Top Button -->
+    <button id="scrollToTopBtn" aria-label="Scroll to top">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />
+        </svg>
+    </button>
+
+    <!-- Floating WhatsApp Widget -->
+    <a href="https://wa.me/917226833799?text=Hello%20Tejas%20Fabrication%2C%20I%20want%20to%20enquire%20about%20fabrication%20work."
+        target="_blank" class="whatsapp-float-btn" id="whatsappFloat" aria-label="Chat on WhatsApp">
+        <svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd"
+                d="M18.403 5.633A8.919 8.919 0 0 0 12.053 3c-4.948 0-8.976 4.027-8.978 8.978 0 1.58.411 3.12 1.193 4.474L3 21l4.643-1.218a8.924 8.924 0 0 0 4.407 1.164h.004c4.947 0 8.975-4.027 8.977-8.978a8.919 8.919 0 0 0-2.628-6.335zM12.053 19.398h-.003c-1.393 0-2.76-.374-3.953-1.082l-.283-.168-2.94.77.784-2.866-.184-.294A7.447 7.447 0 0 1 4.39 11.98c0-4.114 3.35-7.463 7.665-7.463 2.09 0 4.055.813 5.532 2.292a7.433 7.433 0 0 1 2.228 5.534c-.002 4.114-3.352 7.464-7.662 7.464zm4.195-5.733c-.229-.115-1.359-.67-1.57-.747-.209-.077-.362-.115-.515.115-.152.23-.591.747-.724.899-.133.153-.267.172-.496.058a6.257 6.257 0 0 1-1.844-1.137 6.903 6.903 0 0 1-1.275-1.587c-.133-.23-.014-.354.101-.468.103-.102.229-.268.344-.403.114-.134.152-.23.228-.383.076-.153.038-.287-.019-.402-.057-.115-.515-1.243-.706-1.7-.185-.445-.37-.384-.515-.391-.133-.007-.286-.008-.438-.008a.843.843 0 0 0-.61.287c-.209.23-.8.784-.8 1.91 0 1.127.819 2.217.933 2.37.114.153 1.611 2.46 3.902 3.45.545.235.97.375 1.303.481.548.174 1.047.15 1.442.09.44-.067 1.359-.555 1.55-.1.19-.464.19-.861.133-.918-.056-.057-.209-.096-.438-.21z" />
+        </svg>
+        <span class="wa-tooltip" data-key="wa_tooltip_text">Chat on WhatsApp</span>
+    </a>
+
+    <!-- Scripts -->
+    <script src="script.js" defer></script>
+    <script>
+        // Custom visual updates for the dimensions diagram in Step 2
+        const wizWidthInput = document.getElementById('wizWidth');
+        const wizHeightInput = document.getElementById('wizHeight');
+        const diagWidthVal = document.getElementById('diagWidthVal');
+        const diagHeightVal = document.getElementById('diagHeightVal');
+
+        function updateDiagramText() {
+            if (wizWidthInput && diagWidthVal) {
+                diagWidthVal.innerText = wizWidthInput.value + ' ft';
+            }
+            if (wizHeightInput && diagHeightVal) {
+                diagHeightVal.innerText = wizHeightInput.value + ' ft';
+            }
+        }
+
+        if (wizWidthInput && wizHeightInput) {
+            [wizWidthInput, wizHeightInput].forEach(inp => {
+                inp.addEventListener('input', updateDiagramText);
+            });
+            updateDiagramText();
+        }
+    </script>
+</body>
+
+</html>

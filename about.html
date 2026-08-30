@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us — Tejas Fabrication</title>
+    <meta name="description"
+        content="Learn about Tejas Fabrication, our history, core values, and workshop welding capabilities.">
+    <meta name="keywords"
+        content="metal fabrication, iron gates, steel railing, window safety grills, roof sheds, welding workshop, gujarat, tejas fabrication">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Gujarati:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Reading Progress Bar -->
+    <div id="readingProgress"></div>
+
+    <!-- Header Navigation -->
+    <header class="main-header" id="header">
+        <div class="container header-container">
+            <a href="/" class="logo">
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 22H22L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                    <path d="M12 8L7 18H17L12 8Z" fill="currentColor" />
+                    <path d="M3 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <div class="logo-text">
+                    <span class="brand-name" data-key="hero_title">Tejas Fabrication</span>
+                    <span class="brand-sub" data-key="logo_sub">Metal Craftsmanship</span>
+                </div>
+            </a>
+
+            <nav class="nav-menu" id="navMenu">
+                <ul>
+                    <li><a href="/" class="nav-link" data-key="nav_home">Home</a></li>
+                    <li><a href="/about" class="nav-link" data-key="nav_about">About Us</a></li>
+                    <li><a href="/services" class="nav-link" data-key="nav_services">Services</a></li>
+                    <li><a href="/gallery" class="nav-link" data-key="nav_gallery">Gallery</a></li>
+                    <li><a href="/estimator" class="nav-link" data-key="nav_estimator">Estimator</a></li>
+                    <li><a href="/contact" class="nav-link" data-key="nav_contact">Contact Us</a></li>
+                </ul>
+            </nav>
+
+            <div class="nav-actions">
+                <button class="lang-toggle-btn" id="langToggle" aria-label="Switch Language">
+                    <span class="lang-text-en">EN</span>
+                    <span class="lang-divider">/</span>
+                    <span class="lang-text-gu">ગુજરાતી</span>
+                </button>
+                <a href="tel:+917226833799" class="btn btn-primary btn-sm header-call-btn">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                        <path
+                            d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.57a1 1 0 0 0-1.01.24l-2.2 2.2a15.045 15.045 0 0 1-6.59-6.59l2.2-2.21a.96.96 0 0 0 .25-1A11.36 11.36 0 0 1 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1z" />
+                    </svg>
+                    <span data-key="nav_call_btn">+91 72268 33799</span>
+                </a>
+                <button class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle Menu">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Subpage Hero Section -->
+    <section class="subpage-hero">
+        <div class="container">
+            <h1 class="subpage-title" data-key="nav_about">About Us</h1>
+            <p class="subpage-subtitle" data-key="about_desc1">Since our establishment, Tejas Fabrication has been providing high-quality iron and steel fabrication services.</p>
+        </div>
+    </section>
+
+    <!-- Detailed Story Section -->
+    <section class="about-story" style="padding: 80px 0; background: var(--bg-darker);">
+        <div class="container">
+            <div class="grid grid-2-col" style="align-items: center;">
+                <div class="reveal from-left">
+                    <h2 style="font-size: 2.2rem; margin-bottom: 20px; font-family: var(--font-heading);" data-key="about_title">Quality Craftsmanship in Metal</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;" data-key="about_desc2">We use premium materials and advanced welding techniques to ensure every product is built to last. Our work is known for high durability, structural safety, and elegant designs.</p>
+                    <p style="color: var(--text-secondary);" data-key="footer_desc">Premium custom iron and steel structures built with precision. Safety gates, secure window grills, designer railings, and heavy roof sheds.</p>
+                </div>
+                <div class="reveal from-right" style="position: relative;">
+                    <!-- Aesthetic card showing stats -->
+                    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 40px; box-shadow: var(--shadow-md);">
+                        <div style="display: flex; flex-direction: column; gap: 30px;">
+                            <div style="display: flex; align-items: center; gap: 20px;">
+                                <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary); width: 80px;">10+</div>
+                                <div>
+                                    <h4 style="font-size: 1.1rem; margin-bottom: 4px;" data-key="stat_exp">Years Experience</h4>
+                                    <p style="font-size: 0.85rem; color: var(--text-muted);">Crafting metal solutions since 2016</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 20px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                                <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary); width: 80px;">500+</div>
+                                <div>
+                                    <h4 style="font-size: 1.1rem; margin-bottom: 4px;" data-key="stat_projects">Projects Completed</h4>
+                                    <p style="font-size: 0.85rem; color: var(--text-muted);">Residential & commercial builds</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- History Timeline Section -->
+    <section class="about-timeline" style="padding: 80px 0; background: var(--bg-dark); border-top: 1px solid var(--border-color);">
+        <div class="container">
+            <div class="section-header text-center reveal">
+                <h2 class="section-title">Our Timeline</h2>
+                <div class="title-underline"></div>
+            </div>
+
+            <div class="timeline">
+                <!-- Timeline Item 1 -->
+                <div class="timeline-item reveal from-left">
+                    <div class="timeline-badge"></div>
+                    <div class="timeline-card">
+                        <div class="timeline-year">2016</div>
+                        <h3 class="timeline-title" data-key="time_2016_title">Workshop Founding</h3>
+                        <p class="timeline-desc" data-key="time_2016_desc">Started as a small welding workshop serving residential metal demands.</p>
+                    </div>
+                </div>
+
+                <!-- Timeline Item 2 -->
+                <div class="timeline-item reveal from-right">
+                    <div class="timeline-badge"></div>
+                    <div class="timeline-card">
+                        <div class="timeline-year">2019</div>
+                        <h3 class="timeline-title" data-key="time_2019_title">Commercial Expansion</h3>
+                        <p class="timeline-desc" data-key="time_2019_desc">Expanded services to heavy structural sheds, factories, and commercial installations.</p>
+                    </div>
+                </div>
+
+                <!-- Timeline Item 3 -->
+                <div class="timeline-item reveal from-left">
+                    <div class="timeline-badge"></div>
+                    <div class="timeline-card">
+                        <div class="timeline-year">2022</div>
+                        <h3 class="timeline-title" data-key="time_2022_title">SS TIG Weld Adoption</h3>
+                        <p class="timeline-desc" data-key="time_2022_desc">Adopted specialized argon TIG welding tools for premium Stainless Steel (SS 304/316) designs.</p>
+                    </div>
+                </div>
+
+                <!-- Timeline Item 4 -->
+                <div class="timeline-item reveal from-right">
+                    <div class="timeline-badge"></div>
+                    <div class="timeline-card">
+                        <div class="timeline-year">2026</div>
+                        <h3 class="timeline-title" data-key="time_2026_title">Advanced CNC Era</h3>
+                        <p class="timeline-desc" data-key="time_2026_desc">Integrated high-accuracy CNC fiber laser cutting processes for intricate decorative gates.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Core Values Section -->
+    <section class="about-values" style="padding: 80px 0; background: var(--bg-darker); border-top: 1px solid var(--border-color);">
+        <div class="container">
+            <div class="section-header text-center reveal">
+                <h2 class="section-title">Our Core Values</h2>
+                <div class="title-underline"></div>
+            </div>
+
+            <div class="grid grid-4-col">
+                <!-- Value 1 -->
+                <div class="service-card reveal scale-in reveal-delay-1" style="height: 100%;">
+                    <div class="service-body" style="padding: 30px;">
+                        <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 1.3rem;" data-key="val_p_title">Precision Finish</h3>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);" data-key="val_p_desc">We ensure joints are neatly aligned, ground flush, and robustly welded for aesthetic safety.</p>
+                    </div>
+                </div>
+                <!-- Value 2 -->
+                <div class="service-card reveal scale-in reveal-delay-2" style="height: 100%;">
+                    <div class="service-body" style="padding: 30px;">
+                        <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 1.3rem;" data-key="val_d_title">Rust Protection</h3>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);" data-key="val_d_desc">Utilize premium red oxide zinc chromate primers and enamel coatings for maximum weathering resistance.</p>
+                    </div>
+                </div>
+                <!-- Value 3 -->
+                <div class="service-card reveal scale-in reveal-delay-3" style="height: 100%;">
+                    <div class="service-body" style="padding: 30px;">
+                        <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 1.3rem;" data-key="val_c_title">Dedicated Service</h3>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);" data-key="val_c_desc">Complete end-to-end management, from custom size surveys to hassle-free site installations.</p>
+                    </div>
+                </div>
+                <!-- Value 4 -->
+                <div class="service-card reveal scale-in reveal-delay-4" style="height: 100%;">
+                    <div class="service-body" style="padding: 30px;">
+                        <h3 style="color: var(--primary); margin-bottom: 15px; font-size: 1.3rem;" data-key="val_h_title">Fair Pricing</h3>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);" data-key="val_h_desc">Honest quotes, clear weight classifications, and competitive rates with no hidden costs.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="container footer-container">
+            <div class="footer-brand">
+                <div class="logo">
+                    <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 22H22L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round" />
+                        <path d="M12 8L7 18H17L12 8Z" fill="currentColor" />
+                        <path d="M3 20H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                    <span class="brand-name" data-key="hero_title">Tejas Fabrication</span>
+                </div>
+                <p class="footer-desc" data-key="footer_desc">
+                    Premium custom iron and steel structures built with precision. Safety gates, secure window grills,
+                    designer railings, and heavy roof sheds.
+                </p>
+            </div>
+
+            <div class="footer-links">
+                <h4 class="footer-title" data-key="footer_links_title">Quick Links</h4>
+                <ul>
+                    <li><a href="/" data-key="nav_home">Home</a></li>
+                    <li><a href="/about" data-key="nav_about">About Us</a></li>
+                    <li><a href="/services" data-key="nav_services">Services</a></li>
+                    <li><a href="/gallery" data-key="nav_gallery">Gallery</a></li>
+                    <li><a href="/contact" data-key="nav_contact">Contact Us</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-services">
+                <h4 class="footer-title" data-key="footer_srv_title">Our Services</h4>
+                <ul>
+                    <li><a href="/services" data-key="service_gate_title">Gates & Main Doors</a></li>
+                    <li><a href="/services" data-key="service_grill_title">Window Safety Grills</a></li>
+                    <li><a href="/services" data-key="service_railing_title">Balcony & Stair Railings</a></li>
+                    <li><a href="/services" data-key="service_shed_title">Roof Sheds & Structures</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom text-center">
+            <div class="container">
+                <p class="copyright" data-key="footer_copyright">© 2026 Tejas Fabrication. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scroll to Top Button -->
+    <button id="scrollToTopBtn" aria-label="Scroll to top">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />
+        </svg>
+    </button>
+
+    <!-- Floating WhatsApp Widget -->
+    <a href="https://wa.me/917226833799?text=Hello%20Tejas%20Fabrication%2C%20I%20want%20to%20enquire%20about%20fabrication%20work."
+        target="_blank" class="whatsapp-float-btn" id="whatsappFloat" aria-label="Chat on WhatsApp">
+        <svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd"
+                d="M18.403 5.633A8.919 8.919 0 0 0 12.053 3c-4.948 0-8.976 4.027-8.978 8.978 0 1.58.411 3.12 1.193 4.474L3 21l4.643-1.218a8.924 8.924 0 0 0 4.407 1.164h.004c4.947 0 8.975-4.027 8.977-8.978a8.919 8.919 0 0 0-2.628-6.335zM12.053 19.398h-.003c-1.393 0-2.76-.374-3.953-1.082l-.283-.168-2.94.77.784-2.866-.184-.294A7.447 7.447 0 0 1 4.39 11.98c0-4.114 3.35-7.463 7.665-7.463 2.09 0 4.055.813 5.532 2.292a7.433 7.433 0 0 1 2.228 5.534c-.002 4.114-3.352 7.464-7.662 7.464zm4.195-5.733c-.229-.115-1.359-.67-1.57-.747-.209-.077-.362-.115-.515.115-.152.23-.591.747-.724.899-.133.153-.267.172-.496.058a6.257 6.257 0 0 1-1.844-1.137 6.903 6.903 0 0 1-1.275-1.587c-.133-.23-.014-.354.101-.468.103-.102.229-.268.344-.403.114-.134.152-.23.228-.383.076-.153.038-.287-.019-.402-.057-.115-.515-1.243-.706-1.7-.185-.445-.37-.384-.515-.391-.133-.007-.286-.008-.438-.008a.843.843 0 0 0-.61.287c-.209.23-.8.784-.8 1.91 0 1.127.819 2.217.933 2.37.114.153 1.611 2.46 3.902 3.45.545.235.97.375 1.303.481.548.174 1.047.15 1.442.09.44-.067 1.359-.555 1.55-.1.19-.464.19-.861.133-.918-.056-.057-.209-.096-.438-.21z" />
+        </svg>
+        <span class="wa-tooltip" data-key="wa_tooltip_text">Chat on WhatsApp</span>
+    </a>
+
+    <!-- Scripts -->
+    <script src="script.js" defer></script>
+</body>
+
+</html>
