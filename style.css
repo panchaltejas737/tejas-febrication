@@ -72,9 +72,10 @@
 html {
     scroll-behavior: smooth;
     font-size: 16px;
-    overflow-x: hidden;
+    overflow-x: clip;
     width: 100%;
-    max-width: 100vw;
+    max-width: 100%;
+    touch-action: pan-y pinch-zoom;
 }
 
 body {
@@ -82,10 +83,11 @@ body {
     color: var(--text-primary);
     font-family: var(--font-body);
     line-height: 1.6;
-    overflow-x: hidden;
+    overflow-x: clip;
     width: 100%;
-    max-width: 100vw;
+    max-width: 100%;
     position: relative;
+    touch-action: pan-y pinch-zoom;
 }
 
 .container {
@@ -253,11 +255,12 @@ h1, h2, h3, h4, h5, h6 {
     top: 0;
     left: 0;
     width: 100%;
+    max-width: 100%;
     height: var(--header-height);
     background-color: rgba(11, 15, 25, 0.85);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-bottom: var(--border-color);
+    border-bottom: 1px solid var(--border-color);
     z-index: 1000;
     transition: var(--transition-normal);
 }
@@ -270,9 +273,12 @@ h1, h2, h3, h4, h5, h6 {
 
 .header-container {
     height: 100%;
+    width: 100%;
+    max-width: var(--max-width);
     display: flex;
     align-items: center;
     justify-content: space-between;
+    box-sizing: border-box;
 }
 
 .logo {
@@ -1335,17 +1341,24 @@ h1, h2, h3, h4, h5, h6 {
     .nav-menu {
         position: fixed;
         top: var(--header-height);
-        left: -100%;
+        left: 0;
         width: 100%;
+        max-width: 100%;
         height: calc(100vh - var(--header-height));
         background-color: var(--bg-darker);
         padding: 40px;
-        transition: var(--transition-normal);
-        border-top: var(--border-color);
+        transform: translateX(-100%);
+        transition: transform var(--transition-normal);
+        border-top: 1px solid var(--border-color);
+        visibility: hidden;
+        pointer-events: none;
+        box-sizing: border-box;
     }
     
     .nav-menu.active {
-        left: 0;
+        transform: translateX(0);
+        visibility: visible;
+        pointer-events: auto;
     }
     
     .nav-menu ul {
@@ -2228,10 +2241,16 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Universal anti-overflow guarantee */
 html, body {
-    overflow-x: hidden !important;
+    overflow-x: clip !important;
     width: 100% !important;
-    max-width: 100vw !important;
+    max-width: 100% !important;
     position: relative;
+    touch-action: pan-y pinch-zoom;
+}
+
+main, section, header, footer, .container, .hero-section {
+    max-width: 100% !important;
+    overflow-x: clip;
 }
 
 img, video, iframe {
@@ -2243,6 +2262,12 @@ img, video, iframe {
 @media (max-width: 992px) {
     :root {
         --header-height: 70px;
+    }
+
+    /* Prevent translateX on tablets as well */
+    .reveal.from-left,
+    .reveal.from-right {
+        transform: translateY(20px) !important;
     }
 }
 
@@ -2266,8 +2291,8 @@ img, video, iframe {
     .container {
         width: 100% !important;
         max-width: 100% !important;
-        padding-left: 20px !important;
-        padding-right: 20px !important;
+        padding-left: 16px !important;
+        padding-right: 16px !important;
         margin: 0 auto;
         box-sizing: border-box !important;
     }
@@ -2275,39 +2300,61 @@ img, video, iframe {
     /* Header */
     .main-header {
         height: var(--header-height);
+        max-width: 100% !important;
+        overflow: hidden;
     }
 
     .header-container {
-        padding: 0 5px;
+        padding: 0 10px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-sizing: border-box !important;
     }
 
     .logo {
-        gap: 10px;
+        gap: 8px;
+        min-width: 0;
+        flex-shrink: 1;
     }
 
     .logo-icon {
-        width: 30px;
-        height: 30px;
-        min-width: 30px;
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        flex-shrink: 0;
+    }
+
+    .logo-text {
+        min-width: 0;
+        overflow: hidden;
     }
 
     .brand-name {
-        font-size: 1.15rem;
+        font-size: 1.05rem;
         white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .brand-sub {
-        font-size: 0.65rem;
-        white-space: nowrap;
-        letter-spacing: 0.1em;
+        display: none !important; /* Hide long subtitle on mobile to prevent header overflow */
+    }
+
+    .nav-actions {
+        gap: 8px;
+        flex-shrink: 0;
     }
 
     /* Hero Section */
     .hero-section {
         min-height: auto;
-        padding-top: calc(var(--header-height) + 30px);
-        padding-bottom: 70px;
+        padding-top: calc(var(--header-height) + 24px);
+        padding-bottom: 60px;
         overflow: hidden;
+        max-width: 100%;
     }
 
     .hero-content {
@@ -2316,50 +2363,58 @@ img, video, iframe {
     }
 
     .hero-title {
-        font-size: clamp(2rem, 7.5vw, 2.6rem);
-        line-height: 1.15;
+        font-size: clamp(1.85rem, 7vw, 2.35rem);
+        line-height: 1.2;
         word-break: break-word;
         overflow-wrap: break-word;
+        max-width: 100%;
     }
 
     .hero-subtitle {
-        font-size: 1rem;
+        font-size: 0.95rem;
         line-height: 1.5;
-        margin-bottom: 25px;
+        margin-bottom: 24px;
+        word-break: break-word;
+        max-width: 100%;
     }
 
     .hero-ctas {
         flex-direction: column;
         gap: 12px;
         width: 100%;
+        max-width: 100%;
     }
 
     .hero-ctas .btn {
         width: 100%;
+        max-width: 100%;
         justify-content: center;
         padding: 14px 20px;
         font-size: 1rem;
+        box-sizing: border-box;
     }
 
     /* Stats row */
     .stats-row {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 15px;
+        gap: 12px;
         width: 100%;
+        max-width: 100%;
         margin-top: 25px;
     }
 
     .stat-box {
         text-align: center;
+        min-width: 0;
     }
 
     .stat-num {
-        font-size: 1.8rem;
+        font-size: 1.7rem;
     }
 
     .stat-text {
-        font-size: 0.72rem;
+        font-size: 0.7rem;
     }
 
     /* Sections vertical spacing */
@@ -2369,15 +2424,19 @@ img, video, iframe {
     .testimonials-section,
     .contact-section,
     .estimator-section {
-        padding: 60px 0;
+        padding: 50px 0;
+        max-width: 100%;
+        overflow-x: clip;
     }
 
     .section-header {
-        margin-bottom: 40px;
+        margin-bottom: 35px;
+        max-width: 100%;
     }
 
     .section-title {
-        font-size: 1.9rem;
+        font-size: 1.75rem;
+        word-break: break-word;
     }
 
     /* Card paddings on mobile */
@@ -2387,7 +2446,19 @@ img, video, iframe {
     .wizard-card, 
     .testimonial-card,
     .summary-report {
-        padding: 24px 18px !important;
+        padding: 20px 16px !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Diagram fix for narrow screens */
+    .diagram-box {
+        max-width: 100%;
+    }
+    .diagram-h {
+        position: static;
+        margin-top: 6px;
+        justify-content: center;
     }
 
     /* Lightbox buttons */
@@ -2399,99 +2470,104 @@ img, video, iframe {
 
     /* Floating WhatsApp Button */
     .whatsapp-float-btn {
-        width: 52px;
-        height: 52px;
+        width: 50px;
+        height: 50px;
         bottom: 20px;
-        right: 20px;
+        right: 18px;
+    }
+
+    .whatsapp-float-btn .wa-tooltip {
+        display: none !important;
     }
 
     #scrollToTopBtn {
-        bottom: 80px;
-        right: 24px;
-        width: 40px;
-        height: 40px;
+        bottom: 78px;
+        right: 22px;
+        width: 38px;
+        height: 38px;
     }
 }
 
 /* Small Smartphone Devices (max-width: 480px) */
 @media (max-width: 480px) {
     :root {
-        --header-height: 64px;
+        --header-height: 62px;
     }
 
     .container {
-        padding-left: 15px !important;
-        padding-right: 15px !important;
+        padding-left: 14px !important;
+        padding-right: 14px !important;
     }
 
     /* Header Compact */
     .header-container {
-        padding: 0;
+        padding: 0 8px !important;
     }
 
     .logo {
-        gap: 8px;
+        gap: 6px;
     }
 
     .logo-icon {
-        width: 26px;
-        height: 26px;
-        min-width: 26px;
+        width: 24px;
+        height: 24px;
+        min-width: 24px;
     }
 
     .brand-name {
-        font-size: 1.05rem;
+        font-size: 0.98rem;
     }
 
     .brand-sub {
-        font-size: 0.58rem;
-        letter-spacing: 0.06em;
+        display: none !important;
     }
 
     .nav-actions {
-        gap: 8px;
+        gap: 6px;
     }
 
     .lang-toggle-btn {
-        padding: 4px 7px;
-        font-size: 0.7rem;
-        gap: 3px;
+        padding: 4px 6px;
+        font-size: 0.68rem;
+        gap: 2px;
     }
 
     .mobile-nav-toggle {
-        width: 24px;
-        height: 16px;
+        width: 22px;
+        height: 15px;
     }
 
     /* Hero */
     .hero-section {
-        padding-top: calc(var(--header-height) + 20px);
-        padding-bottom: 50px;
+        padding-top: calc(var(--header-height) + 16px);
+        padding-bottom: 45px;
     }
 
     .premium-badge {
-        font-size: 0.72rem;
-        padding: 4px 10px;
+        font-size: 0.7rem;
+        padding: 4px 9px;
+        max-width: 100%;
+        white-space: normal;
     }
 
     .badge-container {
-        margin-bottom: 16px;
-    }
-
-    .hero-title {
-        font-size: clamp(1.75rem, 8vw, 2.2rem);
         margin-bottom: 14px;
     }
 
+    .hero-title {
+        font-size: clamp(1.65rem, 7.5vw, 2rem);
+        margin-bottom: 12px;
+    }
+
     .hero-subtitle {
-        font-size: 0.92rem;
-        margin-bottom: 22px;
+        font-size: 0.88rem;
+        margin-bottom: 20px;
     }
 
     /* Stats in 2 columns + 1 spanning row */
     .stats-row {
         grid-template-columns: 1fr 1fr;
-        gap: 12px;
+        gap: 10px;
     }
 
     .stats-row .stat-box:nth-child(3) {
@@ -2499,18 +2575,18 @@ img, video, iframe {
     }
 
     .stat-num {
-        font-size: 1.6rem;
+        font-size: 1.5rem;
     }
 
     /* Buttons */
     .btn-lg {
-        padding: 13px 20px;
-        font-size: 0.95rem;
+        padding: 12px 18px;
+        font-size: 0.92rem;
     }
 
     /* Footer */
     .footer-container {
-        gap: 28px;
+        gap: 24px;
     }
 }
 

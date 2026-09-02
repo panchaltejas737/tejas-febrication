@@ -1,4 +1,7 @@
-// admin/admin.js — Premium Dashboard logic
+// API Base URL (auto-detects if running via Live Server, file://, or directly on Express)
+const API_BASE = (window.location.protocol === 'file:' || (window.location.port && window.location.port !== '3000')) 
+    ? 'http://localhost:3000' 
+    : '';
 
 // ─── State ───────────────────────────────────
 let currentFilter = 'all';
@@ -354,9 +357,10 @@ async function handleAddEnquirySubmit(e) {
     }
 
     try {
-        const res = await fetch('/api/enquiry', {
+        const res = await fetch(`${API_BASE}/api/enquiry`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({ name, phone, email, source, status, message })
         });
         const data = await res.json();
@@ -399,7 +403,7 @@ function setLanguage(lang) {
 // ─── Session check ────────────────────────────
 async function checkSession() {
     try {
-        const res  = await fetch('/api/check', { credentials: 'include' });
+        const res  = await fetch(`${API_BASE}/api/check`, { credentials: 'include' });
         const data = await res.json();
         if (data.isAdmin) {
             showDashboard(data.username);
@@ -422,7 +426,7 @@ async function doLogin() {
     loginBtn.textContent = '...';
 
     try {
-        const res  = await fetch('/api/login', {
+        const res  = await fetch(`${API_BASE}/api/login`, {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -450,7 +454,7 @@ function showLoginError(msg) {
 
 // ─── Logout ───────────────────────────────────
 async function doLogout() {
-    await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+    await fetch(`${API_BASE}/api/logout`, { method: 'POST', credentials: 'include' });
     dashboard.style.display = 'none';
     loginScreen.style.display = 'flex';
     document.getElementById('loginPassword').value = '';
@@ -472,7 +476,7 @@ async function loadData(manual = false) {
 
 async function loadStats() {
     try {
-        const res  = await fetch('/api/enquiries/stats', { credentials: 'include' });
+        const res  = await fetch(`${API_BASE}/api/enquiries/stats`, { credentials: 'include' });
         const data = await res.json();
         if (data.success) {
             document.getElementById('statTotal').textContent = data.stats.total;
@@ -486,7 +490,7 @@ async function loadStats() {
 async function loadEnquiries() {
     tableBody.innerHTML = '<div class="spinner"></div>';
     try {
-        const res  = await fetch('/api/enquiries?limit=500', { credentials: 'include' });
+        const res  = await fetch(`${API_BASE}/api/enquiries?limit=500`, { credentials: 'include' });
         const data = await res.json();
         if (data.success) {
             enquiries = data.enquiries;
@@ -619,7 +623,7 @@ const STATUS_CYCLE = { new: 'read', read: 'done', done: 'new' };
 async function cycleStatus(id, current, isFromModal = false) {
     const next = STATUS_CYCLE[current];
     try {
-        const res  = await fetch(`/api/enquiries/${id}/status`, {
+        const res  = await fetch(`${API_BASE}/api/enquiries/${id}/status`, {
             method:  'PATCH',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -648,7 +652,7 @@ async function cycleStatus(id, current, isFromModal = false) {
 async function deleteEnquiry(id, isFromModal = false) {
     if (!confirm(translations[currentLanguage].confirm_delete)) return;
     try {
-        const res  = await fetch(`/api/enquiries/${id}`, {
+        const res  = await fetch(`${API_BASE}/api/enquiries/${id}`, {
             method: 'DELETE',
             credentials: 'include'
         });
@@ -674,7 +678,7 @@ function replyWhatsApp(phone, name) {
 async function triggerCall(id, phone) {
     window.location.href = `tel:${phone}`;
     try {
-        const res = await fetch(`/api/enquiries/${id}/call`, {
+        const res = await fetch(`${API_BASE}/api/enquiries/${id}/call`, {
             method: 'POST',
             credentials: 'include'
         });
@@ -707,7 +711,7 @@ async function triggerEmail(id, email, name) {
     const body = encodeURIComponent(`Hello ${name},\n\nThis is Tejas Fabrication. Regarding your enquiry, `);
     window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
     try {
-        const res = await fetch(`/api/enquiries/${id}/email`, {
+        const res = await fetch(`${API_BASE}/api/enquiries/${id}/email`, {
             method: 'POST',
             credentials: 'include'
         });
@@ -976,6 +980,7 @@ function initDynamicCMS() {
 }
 
 // ─── GALLERY HANDLERS ─────────────────────────────────────────
+// ─── GALLERY HANDLERS ─────────────────────────────────────────
 function setupGalleryHandlers() {
     const form = document.getElementById('addGalleryForm');
     const refreshBtn = document.getElementById('refreshGalleryBtn');
@@ -990,9 +995,10 @@ function setupGalleryHandlers() {
             const description = document.getElementById('galDesc').value.trim();
 
             try {
-                const res = await fetch('/api/content/gallery', {
+                const res = await fetch(`${API_BASE}/api/content/gallery`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
                     body: JSON.stringify({ title, title_gu, category, image_url, description })
                 });
                 const data = await res.json();
@@ -1004,7 +1010,8 @@ function setupGalleryHandlers() {
                     showToast('❌ ' + (data.error || 'Failed to add photo'), 'error');
                 }
             } catch (err) {
-                showToast('❌ Network error', 'error');
+                console.error('[Gallery Error]', err);
+                showToast('❌ ' + (err.message === 'Failed to fetch' ? 'Cannot connect to server. Ensure backend is running.' : (err.message || 'Network error')), 'error');
             }
         });
     }
@@ -1018,7 +1025,7 @@ async function loadAdminGallery() {
     container.innerHTML = '<div class="spinner"></div>';
 
     try {
-        const res = await fetch('/api/content/gallery');
+        const res = await fetch(`${API_BASE}/api/content/gallery`, { credentials: 'include' });
         const data = await res.json();
         if (!data.success || !data.items || data.items.length === 0) {
             container.innerHTML = '<div class="empty-state"><div class="icon">🖼️</div><p>No gallery photos found. Add your first photo above!</p></div>';
@@ -1047,7 +1054,10 @@ async function loadAdminGallery() {
 window.deleteGalleryItem = async function(id) {
     if (!confirm('Are you sure you want to delete this photo from the gallery?')) return;
     try {
-        const res = await fetch(`/api/content/gallery/${id}`, { method: 'DELETE' });
+        const res = await fetch(`${API_BASE}/api/content/gallery/${id}`, { 
+            method: 'DELETE',
+            credentials: 'include'
+        });
         const data = await res.json();
         if (data.success) {
             showToast('✅ Photo deleted', 'success');
@@ -1056,7 +1066,8 @@ window.deleteGalleryItem = async function(id) {
             showToast('❌ ' + (data.error || 'Failed to delete'), 'error');
         }
     } catch (err) {
-        showToast('❌ Network error', 'error');
+        console.error('[Gallery Delete Error]', err);
+        showToast('❌ ' + (err.message === 'Failed to fetch' ? 'Cannot connect to server. Ensure backend is running.' : (err.message || 'Network error')), 'error');
     }
 };
 
@@ -1076,9 +1087,10 @@ function setupServicesHandlers() {
             const description_gu = document.getElementById('srvDescGu').value.trim();
 
             try {
-                const res = await fetch('/api/content/services', {
+                const res = await fetch(`${API_BASE}/api/content/services`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
                     body: JSON.stringify({ title, title_gu, image_url, order, description, description_gu })
                 });
                 const data = await res.json();
@@ -1090,7 +1102,8 @@ function setupServicesHandlers() {
                     showToast('❌ ' + (data.error || 'Failed to save service'), 'error');
                 }
             } catch (err) {
-                showToast('❌ Network error', 'error');
+                console.error('[Services Error]', err);
+                showToast('❌ ' + (err.message === 'Failed to fetch' ? 'Cannot connect to server. Ensure backend is running.' : (err.message || 'Network error')), 'error');
             }
         });
     }
@@ -1104,7 +1117,7 @@ async function loadAdminServices() {
     container.innerHTML = '<div class="spinner"></div>';
 
     try {
-        const res = await fetch('/api/content/services');
+        const res = await fetch(`${API_BASE}/api/content/services`, { credentials: 'include' });
         const data = await res.json();
         if (!data.success || !data.services || data.services.length === 0) {
             container.innerHTML = '<div class="empty-state"><div class="icon">⚙️</div><p>No services found.</p></div>';
@@ -1133,7 +1146,10 @@ async function loadAdminServices() {
 window.deleteServiceItem = async function(id) {
     if (!confirm('Are you sure you want to delete this service?')) return;
     try {
-        const res = await fetch(`/api/content/services/${id}`, { method: 'DELETE' });
+        const res = await fetch(`${API_BASE}/api/content/services/${id}`, { 
+            method: 'DELETE',
+            credentials: 'include'
+        });
         const data = await res.json();
         if (data.success) {
             showToast('✅ Service deleted', 'success');
@@ -1142,7 +1158,8 @@ window.deleteServiceItem = async function(id) {
             showToast('❌ ' + (data.error || 'Failed to delete'), 'error');
         }
     } catch (err) {
-        showToast('❌ Network error', 'error');
+        console.error('[Services Delete Error]', err);
+        showToast('❌ ' + (err.message === 'Failed to fetch' ? 'Cannot connect to server. Ensure backend is running.' : (err.message || 'Network error')), 'error');
     }
 };
 
@@ -1162,9 +1179,10 @@ function setupReviewsHandlers() {
             const comment_gu = document.getElementById('revCommentGu').value.trim();
 
             try {
-                const res = await fetch('/api/content/reviews', {
+                const res = await fetch(`${API_BASE}/api/content/reviews`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
                     body: JSON.stringify({ client_name, location, rating, is_active, comment, comment_gu })
                 });
                 const data = await res.json();
@@ -1176,7 +1194,8 @@ function setupReviewsHandlers() {
                     showToast('❌ ' + (data.error || 'Failed to add review'), 'error');
                 }
             } catch (err) {
-                showToast('❌ Network error', 'error');
+                console.error('[Review Error]', err);
+                showToast('❌ ' + (err.message === 'Failed to fetch' ? 'Cannot connect to server. Ensure backend is running.' : (err.message || 'Network error')), 'error');
             }
         });
     }
@@ -1190,7 +1209,7 @@ async function loadAdminReviews() {
     container.innerHTML = '<div class="spinner"></div>';
 
     try {
-        const res = await fetch('/api/content/reviews');
+        const res = await fetch(`${API_BASE}/api/content/reviews`, { credentials: 'include' });
         const data = await res.json();
         if (!data.success || !data.reviews || data.reviews.length === 0) {
             container.innerHTML = '<div class="empty-state"><div class="icon">⭐</div><p>No customer reviews yet.</p></div>';
@@ -1223,7 +1242,10 @@ async function loadAdminReviews() {
 window.deleteReviewItem = async function(id) {
     if (!confirm('Are you sure you want to delete this review?')) return;
     try {
-        const res = await fetch(`/api/content/reviews/${id}`, { method: 'DELETE' });
+        const res = await fetch(`${API_BASE}/api/content/reviews/${id}`, { 
+            method: 'DELETE',
+            credentials: 'include'
+        });
         const data = await res.json();
         if (data.success) {
             showToast('✅ Review deleted', 'success');
@@ -1232,7 +1254,8 @@ window.deleteReviewItem = async function(id) {
             showToast('❌ ' + (data.error || 'Failed to delete'), 'error');
         }
     } catch (err) {
-        showToast('❌ Network error', 'error');
+        console.error('[Review Delete Error]', err);
+        showToast('❌ ' + (err.message === 'Failed to fetch' ? 'Cannot connect to server. Ensure backend is running.' : (err.message || 'Network error')), 'error');
     }
 };
 
@@ -1264,9 +1287,10 @@ function setupSettingsHandlers() {
             };
 
             try {
-                const res = await fetch('/api/content/settings', {
+                const res = await fetch(`${API_BASE}/api/content/settings`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
                     body: JSON.stringify({ phone, whatsapp, email, address, address_gu, estimator_rates })
                 });
                 const data = await res.json();
@@ -1276,7 +1300,8 @@ function setupSettingsHandlers() {
                     showToast('❌ ' + (data.error || 'Failed to save settings'), 'error');
                 }
             } catch (err) {
-                showToast('❌ Network error', 'error');
+                console.error('[Settings Error]', err);
+                showToast('❌ ' + (err.message === 'Failed to fetch' ? 'Cannot connect to server. Ensure backend is running.' : (err.message || 'Network error')), 'error');
             }
         });
     }
@@ -1284,7 +1309,7 @@ function setupSettingsHandlers() {
 
 async function loadAdminSettings() {
     try {
-        const res = await fetch('/api/content/settings');
+        const res = await fetch(`${API_BASE}/api/content/settings`, { credentials: 'include' });
         const data = await res.json();
         if (!data.success || !data.settings) return;
 
@@ -1311,6 +1336,7 @@ async function loadAdminSettings() {
             if (r.sheds_ss) document.getElementById('rate_sheds_ss').value = r.sheds_ss;
         }
     } catch (err) {
+        console.error('[Settings Load Error]', err);
         showToast('❌ Could not load current settings', 'error');
     }
 }

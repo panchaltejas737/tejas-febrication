@@ -2,17 +2,38 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/tejas';
+const PRIMARY_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/tejas';
+const LOCAL_FALLBACK_URI = 'mongodb://127.0.0.1:27017/tejas';
 
-console.log('🔌 Connecting to MongoDB...');
-mongoose.connect(MONGODB_URI, {
-    serverSelectionTimeoutMS: 5000
-})
-    .then(() => console.log('✅ Connected to MongoDB Atlas / Local MongoDB successfully!'))
-    .catch((err) => {
-        console.error('❌ MongoDB Connection Error:', err.message);
-        console.warn('⚠️ Server will run, but database actions will fail. Please set a valid MONGODB_URI in your .env file.');
-    });
+async function connectDB() {
+    console.log('🔌 Connecting to MongoDB...');
+    try {
+        await mongoose.connect(PRIMARY_URI, {
+            serverSelectionTimeoutMS: 5000
+        });
+        const isCloud = PRIMARY_URI.includes('mongodb+srv');
+        console.log(`✅ Connected to MongoDB successfully! (${isCloud ? 'MongoDB Atlas' : 'Local MongoDB'})`);
+        return true;
+    } catch (err) {
+        console.warn(`⚠️ Primary MongoDB connection failed (${err.message}).`);
+        if (PRIMARY_URI !== LOCAL_FALLBACK_URI) {
+            console.log(`🔄 Attempting fallback to local MongoDB (${LOCAL_FALLBACK_URI})...`);
+            try {
+                await mongoose.connect(LOCAL_FALLBACK_URI, {
+                    serverSelectionTimeoutMS: 4000
+                });
+                console.log('✅ Connected to local MongoDB fallback successfully!');
+                return true;
+            } catch (fallbackErr) {
+                console.error('❌ Local MongoDB fallback also failed:', fallbackErr.message);
+            }
+        }
+        console.warn('⚠️ Database actions may fail until MongoDB is connected.');
+        return false;
+    }
+}
+
+connectDB();
 
 // ─── Enquiry Schema ───────────────────────────
 const EnquirySchema = new mongoose.Schema({

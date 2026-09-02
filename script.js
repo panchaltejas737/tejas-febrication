@@ -1,3 +1,8 @@
+// API Base URL (auto-detects if running via Live Server, file://, or directly on Express)
+const API_BASE = (window.location.protocol === 'file:' || (window.location.port && window.location.port !== '3000')) 
+    ? 'http://localhost:3000' 
+    : '';
+
 // Translation Dictionary
 const translations = {
     en: {
@@ -414,7 +419,7 @@ function handleContactSubmit(method) {
     }
 
     // ── Save enquiry to backend database ──────────────
-    fetch('/api/enquiry', {
+    fetch(`${API_BASE}/api/enquiry`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -642,7 +647,7 @@ function saveEstimateToDatabase(message) {
     }
     
     // Send to database in background (no await to prevent popup blocker)
-    fetch('/api/enquiry', {
+    fetch(`${API_BASE}/api/enquiry`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, phone: cleanedPhone, message, source: 'estimator' })
@@ -1173,7 +1178,7 @@ let liveSiteData = {
 
 async function loadDynamicContent() {
     try {
-        const res = await fetch('/api/content/all');
+        const res = await fetch(`${API_BASE}/api/content/all`);
         if (!res.ok) return;
         const result = await res.json();
         if (!result.success || !result.data) return;

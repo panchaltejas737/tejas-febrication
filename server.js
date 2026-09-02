@@ -6,7 +6,7 @@ const session    = require('express-session');
 const cors       = require('cors');
 const path       = require('path');
 const bcrypt     = require('bcryptjs');
-const { Admin, seedInitialContent } = require('./database');
+const { mongoose, Admin, seedInitialContent } = require('./database');
 const compression = require('compression');
 
 // ─── App Setup ───────────────────────────────
@@ -36,6 +36,22 @@ async function seedAdmin() {
     const password = process.env.ADMIN_PASSWORD || 'tejas@2026';
 
     try {
+        if (mongoose.connection.readyState !== 1) {
+            await new Promise((resolve) => {
+                const timer = setTimeout(() => resolve(), 5000);
+                mongoose.connection.once('connected', () => {
+                    clearTimeout(timer);
+                    resolve();
+                });
+                mongoose.connection.once('error', () => {
+                    clearTimeout(timer);
+                    resolve();
+                });
+            });
+        }
+        if (mongoose.connection.readyState !== 1) {
+            return;
+        }
         const existing = await Admin.findOne({ username });
         if (!existing) {
             const hash = await bcrypt.hash(password, 12);
@@ -66,7 +82,9 @@ const staticOptions = {
         const ext = path.extname(filepath).toLowerCase();
         if (ext === '.html') {
             res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
-        } else if (['.js', '.css', '.webp', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.woff', '.woff2'].includes(ext)) {
+        } else if (['.js', '.css'].includes(ext)) {
+            res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
+        } else if (['.webp', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.woff', '.woff2'].includes(ext)) {
             res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
         }
     }
