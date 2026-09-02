@@ -78,7 +78,7 @@ const translations = {
         contact_submit_email: "Send Email",
         contact_info_title: "Contact Details",
         contact_addr_label: "Address",
-        contact_addr_val: "Near Railway Crossing, GIDC Area, Gujarat, India",
+        contact_addr_val: "New Vagitable Market, Mandvi, Surat",
         map_location_badge: "Visit Tejas Fabrication Workshop",
         map_open_btn: "Open in Google Maps",
         
@@ -180,7 +180,7 @@ const translations = {
         contact_submit_email: "ઇમેઇલ દ્વારા મોકલો",
         contact_info_title: "સંપર્ક માહિતી",
         contact_addr_label: "સરનામું",
-        contact_addr_val: "રેલ્વે ક્રોસિંગ પાસે, જી.આઈ.ડી.સી. વિસ્તાર, ગુજરાત, ભારત",
+        contact_addr_val: "નવી શાકભાજી માર્કેટ, માંડવી, સુરત",
         map_location_badge: "અમારી ફેબ્રિકેશન વર્કશોપની મુલાકાત લો",
         map_open_btn: "ગુગલ મેપ્સમાં જુઓ",
         

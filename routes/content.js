@@ -78,8 +78,8 @@ const defaultSettings = {
     phone: '+91 72268 33799',
     whatsapp: '917226833799',
     email: 'contact@tejasfabrication.com',
-    address: 'Near Railway Crossing, GIDC Area, Gujarat, India',
-    address_gu: 'રેલવે ક્રોસિંગ પાસે, જીઆઈડીસી વિસ્તાર, ગુજરાત, ભારત',
+    address: 'New Vagitable Market, Mandvi, Surat',
+    address_gu: 'નવી શાકભાજી માર્કેટ, માંડવી, સુરત',
     estimator_rates: {
         gates_standard: 380, gates_designer: 550, gates_ss: 850,
         grills_standard: 240, grills_designer: 380, grills_ss: 650,

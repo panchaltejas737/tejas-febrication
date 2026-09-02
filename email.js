@@ -182,7 +182,7 @@ async function sendCustomerConfirmation(enquiry) {
                 <div class="contact-card">
                     <h4>Need urgent assistance?</h4>
                     <p style="margin: 4px 0;">📞 Call / WhatsApp: <strong>+91 72268 33799</strong></p>
-                    <p style="margin: 4px 0;">📍 Workshop: Near Railway Crossing, GIDC Area, Gujarat, India</p>
+                    <p style="margin: 4px 0;">📍 Workshop: New Vagitable Market, Mandvi, Surat</p>
                     <p style="margin: 4px 0;">🕒 Hours: Monday - Saturday (9:00 AM - 7:00 PM)</p>
                 </div>
 
