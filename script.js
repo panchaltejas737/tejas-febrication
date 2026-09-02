@@ -347,6 +347,7 @@ navLinks.forEach(link => {
 });
 
 // Portfolio Filtration Logic
+// Portfolio Filtration Logic
 if (galleryFilters) {
     const filterButtons = galleryFilters.querySelectorAll('.filter-btn');
     filterButtons.forEach(btn => {
@@ -356,8 +357,9 @@ if (galleryFilters) {
             btn.classList.add('active');
             
             const filterValue = btn.getAttribute('data-filter');
+            const items = document.querySelectorAll('.gallery-item');
             
-            galleryItems.forEach(item => {
+            items.forEach(item => {
                 const itemCategory = item.getAttribute('data-category');
                 
                 // Visual Fade Animation Transition
@@ -1265,33 +1267,69 @@ function applyLiveSettings(settings) {
     }
 }
 
+// Helper: Resolve image URLs properly across root, subpages, and protocol contexts
+function resolveClientImageUrl(url) {
+    if (!url) return 'assets/hero.webp';
+    const trimmed = String(url).trim();
+    if (/^(https?:|data:|\/\/)/i.test(trimmed)) {
+        return trimmed;
+    }
+    const cleanPath = trimmed.replace(/^(\.\.\/|\/)+/, '');
+    return cleanPath;
+}
+
 function renderLiveServices(services) {
     const grid = document.querySelector('.service-grid');
-    if (!grid) return;
+    if (grid) {
+        grid.innerHTML = services.map(srv => {
+            const title = (currentLanguage === 'gu' && srv.title_gu) ? srv.title_gu : srv.title;
+            const desc = (currentLanguage === 'gu' && srv.description_gu) ? srv.description_gu : srv.description;
+            const enquireText = currentLanguage === 'gu' ? "પૂછપરછ કરો" : "Enquire Now";
+            const imgSrc = resolveClientImageUrl(srv.image_url);
+            return `
+                <div class="service-card reveal visible" style="opacity: 1;">
+                    <div class="service-img-wrapper">
+                        <img src="${imgSrc}" alt="${title}" class="service-img" loading="lazy" onerror="this.onerror=null; this.src='assets/hero.webp';">
+                        <div class="service-overlay"></div>
+                    </div>
+                    <div class="service-body">
+                        <h3 class="service-title">${title}</h3>
+                        <p class="service-text">${desc}</p>
+                        <a href="/contact" class="service-link">
+                            <span>${enquireText}</span>
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                                <path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42 5.43 5.43H5v2z"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
 
-    grid.innerHTML = services.map(srv => {
-        const title = (currentLanguage === 'gu' && srv.title_gu) ? srv.title_gu : srv.title;
-        const desc = (currentLanguage === 'gu' && srv.description_gu) ? srv.description_gu : srv.description;
-        const enquireText = currentLanguage === 'gu' ? "પૂછપરછ કરો" : "Enquire Now";
-        return `
-            <div class="service-card reveal visible" style="opacity: 1;">
-                <div class="service-img-wrapper">
-                    <img src="${srv.image_url}" alt="${title}" class="service-img" loading="lazy" onerror="this.src='assets/hero.webp'">
-                    <div class="service-overlay"></div>
+    const detailContainer = document.getElementById('servicesDetailContainer');
+    if (detailContainer && services && services.length > 0) {
+        detailContainer.innerHTML = services.map((srv, idx) => {
+            const title = (currentLanguage === 'gu' && srv.title_gu) ? srv.title_gu : srv.title;
+            const desc = (currentLanguage === 'gu' && srv.description_gu) ? srv.description_gu : srv.description;
+            const enquireText = currentLanguage === 'gu' ? "પૂછપરછ કરો" : "Enquire Now";
+            const isReversed = idx % 2 === 1;
+            const borderTop = idx > 0 ? 'border-top: 1px solid var(--border-color); padding-top: 80px;' : '';
+            const imgSrc = resolveClientImageUrl(srv.image_url);
+            return `
+                <div class="grid grid-2-col" style="align-items: center; gap: 50px; ${borderTop}">
+                    <div class="reveal from-left" style="${isReversed ? 'order: 2;' : ''}">
+                        <h2 style="font-size: 2.2rem; margin-bottom: 15px; font-family: var(--font-heading); color: var(--primary);">${title}</h2>
+                        <p style="color: var(--text-secondary); margin-bottom: 20px;">${desc}</p>
+                        <a href="/contact" class="btn btn-primary">${enquireText}</a>
+                    </div>
+                    <div class="reveal from-right" style="${isReversed ? 'order: 1;' : ''}">
+                        <img src="${imgSrc}" alt="${title}" style="width: 100%; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: var(--shadow-md);" loading="lazy" onerror="this.onerror=null; this.src='assets/hero.webp';">
+                    </div>
                 </div>
-                <div class="service-body">
-                    <h3 class="service-title">${title}</h3>
-                    <p class="service-text">${desc}</p>
-                    <a href="#contact" class="service-link">
-                        <span>${enquireText}</span>
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-                            <path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42 5.43 5.43H5v2z"/>
-                        </svg>
-                    </a>
-                </div>
-            </div>
-        `;
-    }).join('');
+            `;
+        }).join('');
+    }
 }
 
 function renderLiveGallery(items) {
@@ -1300,9 +1338,10 @@ function renderLiveGallery(items) {
 
     grid.innerHTML = items.map(item => {
         const title = (currentLanguage === 'gu' && item.title_gu) ? item.title_gu : item.title;
+        const imgSrc = resolveClientImageUrl(item.image_url);
         return `
-            <div class="gallery-item" data-category="${item.category}" style="opacity: 1;">
-                <img src="${item.image_url}" alt="${title}" loading="lazy" onerror="this.src='assets/hero.webp'">
+            <div class="gallery-item" data-category="${item.category}" style="opacity: 1; cursor: pointer;">
+                <img src="${imgSrc}" alt="${title}" loading="lazy" onerror="this.onerror=null; this.src='assets/hero.webp';">
                 <div class="gallery-item-info">
                     <span class="gallery-item-cat">${item.category.toUpperCase()}</span>
                     <h4 class="gallery-item-title">${title}</h4>

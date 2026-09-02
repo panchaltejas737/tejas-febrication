@@ -16,8 +16,8 @@ const PORT = process.env.PORT || 3000;
 // ─── Middleware ───────────────────────────────
 app.use(compression());
 app.use(cors({ origin: true, credentials: true }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 app.use(session({
     secret:            process.env.SESSION_SECRET || 'tejas_secret_fallback',
@@ -90,8 +90,14 @@ const staticOptions = {
     }
 };
 
-// ─── Admin Panel ──────────────────────────────
-// Serve admin dashboard (protected by session check on client + API level)
+// ─── Static Assets & Admin Panel ───────────────────
+// Serve assets directly for both root and /admin contexts
+app.use('/admin/assets', express.static(path.join(__dirname, 'assets'), staticOptions));
+app.use('/assets',       express.static(path.join(__dirname, 'assets'), staticOptions));
+app.use('/admin/uploads', express.static(path.join(__dirname, 'uploads'), staticOptions));
+app.use('/uploads',       express.static(path.join(__dirname, 'uploads'), staticOptions));
+
+// Serve admin dashboard
 app.use('/admin', express.static(path.join(__dirname, 'admin'), staticOptions));
 
 // Redirect /admin to /admin/index.html
@@ -124,8 +130,11 @@ app.get('/contact', (req, res) => {
 // Serve the main Tejas Fabrication website
 app.use(express.static(path.join(__dirname), staticOptions));
 
-// Fallback → always serve index.html for SPA-style navigation
+// Fallback → always serve index.html for SPA-style navigation, but return 404 for missing static files/API
 app.get('*', (req, res) => {
+    if (req.path.startsWith('/api/') || /\.(webp|png|jpe?g|gif|svg|ico|css|js|map|woff2?|ttf|eot)$/i.test(req.path)) {
+        return res.status(404).send('Not Found');
+    }
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 

@@ -1,7 +1,56 @@
 // routes/content.js — Dynamic content API for Tejas Fabrication
 const express = require('express');
 const router = express.Router();
+const path = require('path');
+const fs = require('fs');
 const { mongoose, GalleryItem, ServiceItem, Review, SiteSetting } = require('../database');
+
+let sharp;
+try {
+    sharp = require('sharp');
+} catch (e) {
+    console.warn('[Upload] sharp not available, using standard file write fallback');
+}
+
+async function saveBase64Image(dataUriOrBase64, prefix = 'img') {
+    if (!dataUriOrBase64) throw new Error('No image data provided');
+    const uploadsDir = path.join(__dirname, '..', 'uploads');
+    if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    let buffer;
+    let extension = 'webp';
+
+    const matches = dataUriOrBase64.match(/^data:image\/([a-zA-Z0-9+.-]+);base64,(.+)$/);
+    if (matches) {
+        const mimeType = matches[1].toLowerCase();
+        if (mimeType.includes('png')) extension = 'png';
+        else if (mimeType.includes('jpeg') || mimeType.includes('jpg')) extension = 'jpg';
+        else if (mimeType.includes('webp')) extension = 'webp';
+        else if (mimeType.includes('svg')) extension = 'svg';
+        buffer = Buffer.from(matches[2], 'base64');
+    } else {
+        buffer = Buffer.from(dataUriOrBase64, 'base64');
+    }
+
+    const filename = `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.webp`;
+    const targetPath = path.join(uploadsDir, filename);
+
+    if (sharp) {
+        try {
+            await sharp(buffer).webp({ quality: 85 }).toFile(targetPath);
+            return `uploads/${filename}`;
+        } catch (err) {
+            console.warn('[Sharp Warning, fallback to raw save]:', err.message);
+        }
+    }
+
+    const fallbackFilename = `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${extension}`;
+    const fallbackPath = path.join(uploadsDir, fallbackFilename);
+    await fs.promises.writeFile(fallbackPath, buffer);
+    return `uploads/${fallbackFilename}`;
+}
 
 // Default fallback data for zero-downtime resiliency
 const defaultGallery = [
@@ -161,6 +210,25 @@ router.get('/settings', async (req, res) => {
 // 2. PROTECTED ADMIN ENDPOINTS
 // ─────────────────────────────────────────────
 
+// ── IMAGE UPLOAD ──
+router.post('/upload', requireAdmin, async (req, res) => {
+    try {
+        const { image, prefix } = req.body;
+        if (!image) {
+            return res.status(400).json({ success: false, error: 'Image data is required.' });
+        }
+        const savedPath = await saveBase64Image(image, prefix || 'work');
+        return res.json({
+            success: true,
+            url: savedPath,
+            message: 'Image uploaded successfully.'
+        });
+    } catch (err) {
+        console.error('[Upload Error]', err.message);
+        return res.status(500).json({ success: false, error: err.message || 'Failed to upload image' });
+    }
+});
+
 // ── GALLERY CRUD ──
 router.post('/gallery', requireAdmin, async (req, res) => {
     try {
@@ -168,11 +236,17 @@ router.post('/gallery', requireAdmin, async (req, res) => {
         if (!title || !image_url) {
             return res.status(400).json({ success: false, error: 'Title and Image URL are required.' });
         }
+
+        let finalImageUrl = String(image_url).trim();
+        if (finalImageUrl.startsWith('data:image/')) {
+            finalImageUrl = await saveBase64Image(finalImageUrl, 'gallery');
+        }
+
         const item = new GalleryItem({
             title: String(title).trim(),
             title_gu: title_gu ? String(title_gu).trim() : '',
             category: category || 'gates',
-            image_url: String(image_url).trim(),
+            image_url: finalImageUrl,
             description: description ? String(description).trim() : ''
         });
         await item.save();
@@ -201,12 +275,18 @@ router.post('/services', requireAdmin, async (req, res) => {
         if (!title || !description || !image_url) {
             return res.status(400).json({ success: false, error: 'Title, description, and image URL are required.' });
         }
+
+        let finalImageUrl = String(image_url).trim();
+        if (finalImageUrl.startsWith('data:image/')) {
+            finalImageUrl = await saveBase64Image(finalImageUrl, 'service');
+        }
+
         const service = new ServiceItem({
             title: String(title).trim(),
             title_gu: title_gu ? String(title_gu).trim() : '',
             description: String(description).trim(),
             description_gu: description_gu ? String(description_gu).trim() : '',
-            image_url: String(image_url).trim(),
+            image_url: finalImageUrl,
             order: Number(order) || 0
         });
         await service.save();
@@ -218,7 +298,11 @@ router.post('/services', requireAdmin, async (req, res) => {
 
 router.put('/services/:id', requireAdmin, async (req, res) => {
     try {
-        const updated = await ServiceItem.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const updateData = { ...req.body };
+        if (updateData.image_url && String(updateData.image_url).startsWith('data:image/')) {
+            updateData.image_url = await saveBase64Image(updateData.image_url, 'service');
+        }
+        const updated = await ServiceItem.findByIdAndUpdate(req.params.id, updateData, { new: true });
         if (!updated) {
             return res.status(404).json({ success: false, error: 'Service not found.' });
         }

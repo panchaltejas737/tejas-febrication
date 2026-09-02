@@ -981,9 +981,98 @@ function initDynamicCMS() {
 
 // ─── GALLERY HANDLERS ─────────────────────────────────────────
 // ─── GALLERY HANDLERS ─────────────────────────────────────────
+// ─── GALLERY HANDLERS & IMAGE UPLOAD ─────────────────────────
+let galSelectedImageBase64 = null;
+let srvSelectedImageBase64 = null;
+
 function setupGalleryHandlers() {
     const form = document.getElementById('addGalleryForm');
     const refreshBtn = document.getElementById('refreshGalleryBtn');
+    const fileInput = document.getElementById('galFileInput');
+    const dropZone = document.getElementById('galDropZone');
+    const previewCard = document.getElementById('galPreviewCard');
+    const previewImg = document.getElementById('galPreviewImg');
+    const previewName = document.getElementById('galPreviewName');
+    const removeBtn = document.getElementById('galRemovePreviewBtn');
+    const urlInput = document.getElementById('galImageUrl');
+    const submitBtn = document.getElementById('galSubmitBtn');
+
+    // Handle File Selection
+    function handleGalFile(file) {
+        if (!file || !file.type.startsWith('image/')) {
+            showToast('⚠️ Please select a valid image file (JPG, PNG, WEBP)', 'error');
+            return;
+        }
+        if (file.size > 20 * 1024 * 1024) {
+            showToast('⚠️ Image size must be less than 20MB', 'error');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            galSelectedImageBase64 = e.target.result;
+            if (previewImg) previewImg.src = galSelectedImageBase64;
+            if (previewName) previewName.innerText = file.name;
+            if (previewCard) previewCard.classList.add('active');
+            if (dropZone) dropZone.style.display = 'none';
+            if (urlInput) urlInput.value = '';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                handleGalFile(e.target.files[0]);
+            }
+        });
+    }
+
+    // Drag & Drop
+    if (dropZone) {
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+            });
+        });
+        dropZone.addEventListener('drop', (e) => {
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+                handleGalFile(e.dataTransfer.files[0]);
+            }
+        });
+    }
+
+    // Remove Preview
+    if (removeBtn) {
+        removeBtn.addEventListener('click', () => {
+            galSelectedImageBase64 = null;
+            if (fileInput) fileInput.value = '';
+            if (previewImg) previewImg.src = '';
+            if (previewCard) previewCard.classList.remove('active');
+            if (dropZone) dropZone.style.display = 'flex';
+        });
+    }
+
+    // URL input live preview if no file selected
+    if (urlInput) {
+        urlInput.addEventListener('input', () => {
+            const val = urlInput.value.trim();
+            if (val && !galSelectedImageBase64) {
+                if (previewImg) previewImg.src = resolveAdminImageUrl(val);
+                if (previewName) previewName.innerText = 'URL Image';
+                if (previewCard) previewCard.classList.add('active');
+            } else if (!val && !galSelectedImageBase64) {
+                if (previewCard) previewCard.classList.remove('active');
+            }
+        });
+    }
 
     if (form) {
         form.addEventListener('submit', async (e) => {
@@ -991,10 +1080,36 @@ function setupGalleryHandlers() {
             const title = document.getElementById('galTitle').value.trim();
             const title_gu = document.getElementById('galTitleGu').value.trim();
             const category = document.getElementById('galCategory').value;
-            const image_url = document.getElementById('galImageUrl').value.trim();
+            let image_url = urlInput ? urlInput.value.trim() : '';
             const description = document.getElementById('galDesc').value.trim();
 
+            if (!galSelectedImageBase64 && !image_url) {
+                showToast('⚠️ Please select a photo from your device or enter an image URL.', 'error');
+                return;
+            }
+
+            const originalBtnText = submitBtn ? submitBtn.innerText : 'Upload';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerText = '⏳ Uploading Photo...';
+            }
+
             try {
+                // If a file was picked, upload it first to /api/content/upload
+                if (galSelectedImageBase64) {
+                    const upRes = await fetch(`${API_BASE}/api/content/upload`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ image: galSelectedImageBase64, prefix: 'gallery' })
+                    });
+                    const upData = await upRes.json();
+                    if (!upData.success) {
+                        throw new Error(upData.error || 'Failed to upload photo file');
+                    }
+                    image_url = upData.url;
+                }
+
                 const res = await fetch(`${API_BASE}/api/content/gallery`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1005,6 +1120,9 @@ function setupGalleryHandlers() {
                 if (data.success) {
                     showToast('✅ Photo added to live gallery!', 'success');
                     form.reset();
+                    galSelectedImageBase64 = null;
+                    if (previewCard) previewCard.classList.remove('active');
+                    if (dropZone) dropZone.style.display = 'flex';
                     loadAdminGallery();
                 } else {
                     showToast('❌ ' + (data.error || 'Failed to add photo'), 'error');
@@ -1012,11 +1130,34 @@ function setupGalleryHandlers() {
             } catch (err) {
                 console.error('[Gallery Error]', err);
                 showToast('❌ ' + (err.message === 'Failed to fetch' ? 'Cannot connect to server. Ensure backend is running.' : (err.message || 'Network error')), 'error');
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = originalBtnText;
+                }
             }
         });
     }
 
     if (refreshBtn) refreshBtn.addEventListener('click', loadAdminGallery);
+}
+
+// Helper: Resolve image URLs properly relative to admin directory or backend host
+function resolveAdminImageUrl(url) {
+    if (!url) return window.location.protocol === 'file:' ? '../assets/hero.webp' : '/assets/hero.webp';
+    const trimmed = String(url).trim();
+    if (/^(https?:|data:|\/\/)/i.test(trimmed)) {
+        return trimmed;
+    }
+    const cleanPath = trimmed.replace(/^(\.\.\/|\/)+/, '');
+    if (window.location.protocol === 'file:') {
+        return '../' + cleanPath;
+    }
+    return '/' + cleanPath;
+}
+
+function getAdminFallbackImg() {
+    return window.location.protocol === 'file:' ? '../assets/hero.webp' : '/assets/hero.webp';
 }
 
 async function loadAdminGallery() {
@@ -1032,9 +1173,14 @@ async function loadAdminGallery() {
             return;
         }
 
-        container.innerHTML = data.items.map(item => `
+        const fallback = getAdminFallbackImg();
+        container.innerHTML = data.items.map(item => {
+            const imgSrc = resolveAdminImageUrl(item.image_url);
+            return `
             <div class="admin-card-item">
-                <img src="${escHtml(item.image_url)}" alt="${escHtml(item.title)}" class="admin-card-img" onerror="this.src='assets/hero.webp'">
+                <a href="${escHtml(imgSrc)}" target="_blank" title="Click to view full image">
+                    <img src="${escHtml(imgSrc)}" alt="${escHtml(item.title)}" class="admin-card-img" loading="lazy" onerror="this.onerror=null; this.src='${fallback}';">
+                </a>
                 <div class="admin-card-body">
                     <span class="admin-card-cat">${escHtml(item.category)}</span>
                     <div class="admin-card-title">${escHtml(item.title)}</div>
@@ -1045,7 +1191,8 @@ async function loadAdminGallery() {
                     <button class="btn-admin-danger" onclick="deleteGalleryItem('${item._id}')">🗑️ Delete</button>
                 </div>
             </div>
-        `).join('');
+            `;
+        }).join('');
     } catch (err) {
         container.innerHTML = '<div class="empty-state"><p>Failed to load gallery photos.</p></div>';
     }
@@ -1071,22 +1218,129 @@ window.deleteGalleryItem = async function(id) {
     }
 };
 
-// ─── SERVICES HANDLERS ────────────────────────────────────────
+// ─── SERVICES HANDLERS & IMAGE UPLOAD ─────────────────────────
 function setupServicesHandlers() {
     const form = document.getElementById('addServiceForm');
     const refreshBtn = document.getElementById('refreshServicesBtn');
+    const fileInput = document.getElementById('srvFileInput');
+    const dropZone = document.getElementById('srvDropZone');
+    const previewCard = document.getElementById('srvPreviewCard');
+    const previewImg = document.getElementById('srvPreviewImg');
+    const previewName = document.getElementById('srvPreviewName');
+    const removeBtn = document.getElementById('srvRemovePreviewBtn');
+    const urlInput = document.getElementById('srvImageUrl');
+    const submitBtn = document.getElementById('srvSubmitBtn');
+
+    function handleSrvFile(file) {
+        if (!file || !file.type.startsWith('image/')) {
+            showToast('⚠️ Please select a valid image file (JPG, PNG, WEBP)', 'error');
+            return;
+        }
+        if (file.size > 20 * 1024 * 1024) {
+            showToast('⚠️ Image size must be less than 20MB', 'error');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            srvSelectedImageBase64 = e.target.result;
+            if (previewImg) previewImg.src = srvSelectedImageBase64;
+            if (previewName) previewName.innerText = file.name;
+            if (previewCard) previewCard.classList.add('active');
+            if (dropZone) dropZone.style.display = 'none';
+            if (urlInput) urlInput.value = '';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                handleSrvFile(e.target.files[0]);
+            }
+        });
+    }
+
+    if (dropZone) {
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+            });
+        });
+        dropZone.addEventListener('drop', (e) => {
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+                handleSrvFile(e.dataTransfer.files[0]);
+            }
+        });
+    }
+
+    if (removeBtn) {
+        removeBtn.addEventListener('click', () => {
+            srvSelectedImageBase64 = null;
+            if (fileInput) fileInput.value = '';
+            if (previewImg) previewImg.src = '';
+            if (previewCard) previewCard.classList.remove('active');
+            if (dropZone) dropZone.style.display = 'flex';
+        });
+    }
+
+    if (urlInput) {
+        urlInput.addEventListener('input', () => {
+            const val = urlInput.value.trim();
+            if (val && !srvSelectedImageBase64) {
+                if (previewImg) previewImg.src = resolveAdminImageUrl(val);
+                if (previewName) previewName.innerText = 'URL Image';
+                if (previewCard) previewCard.classList.add('active');
+            } else if (!val && !srvSelectedImageBase64) {
+                if (previewCard) previewCard.classList.remove('active');
+            }
+        });
+    }
 
     if (form) {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const title = document.getElementById('srvTitle').value.trim();
             const title_gu = document.getElementById('srvTitleGu').value.trim();
-            const image_url = document.getElementById('srvImageUrl').value.trim();
+            let image_url = urlInput ? urlInput.value.trim() : '';
             const order = parseInt(document.getElementById('srvOrder').value) || 1;
             const description = document.getElementById('srvDesc').value.trim();
             const description_gu = document.getElementById('srvDescGu').value.trim();
 
+            if (!srvSelectedImageBase64 && !image_url) {
+                showToast('⚠️ Please select a service photo or enter an image URL.', 'error');
+                return;
+            }
+
+            const originalBtnText = submitBtn ? submitBtn.innerText : 'Save';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerText = '⏳ Saving Service...';
+            }
+
             try {
+                // If file selected, upload first
+                if (srvSelectedImageBase64) {
+                    const upRes = await fetch(`${API_BASE}/api/content/upload`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ image: srvSelectedImageBase64, prefix: 'service' })
+                    });
+                    const upData = await upRes.json();
+                    if (!upData.success) {
+                        throw new Error(upData.error || 'Failed to upload service image');
+                    }
+                    image_url = upData.url;
+                }
+
                 const res = await fetch(`${API_BASE}/api/content/services`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1097,6 +1351,9 @@ function setupServicesHandlers() {
                 if (data.success) {
                     showToast('✅ Service saved!', 'success');
                     form.reset();
+                    srvSelectedImageBase64 = null;
+                    if (previewCard) previewCard.classList.remove('active');
+                    if (dropZone) dropZone.style.display = 'flex';
                     loadAdminServices();
                 } else {
                     showToast('❌ ' + (data.error || 'Failed to save service'), 'error');
@@ -1104,6 +1361,11 @@ function setupServicesHandlers() {
             } catch (err) {
                 console.error('[Services Error]', err);
                 showToast('❌ ' + (err.message === 'Failed to fetch' ? 'Cannot connect to server. Ensure backend is running.' : (err.message || 'Network error')), 'error');
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = originalBtnText;
+                }
             }
         });
     }
@@ -1124,9 +1386,14 @@ async function loadAdminServices() {
             return;
         }
 
-        container.innerHTML = data.services.map(srv => `
+        const fallback = getAdminFallbackImg();
+        container.innerHTML = data.services.map(srv => {
+            const imgSrc = resolveAdminImageUrl(srv.image_url);
+            return `
             <div class="admin-card-item">
-                <img src="${escHtml(srv.image_url)}" alt="${escHtml(srv.title)}" class="admin-card-img" onerror="this.src='assets/hero.webp'">
+                <a href="${escHtml(imgSrc)}" target="_blank" title="Click to view full image">
+                    <img src="${escHtml(imgSrc)}" alt="${escHtml(srv.title)}" class="admin-card-img" loading="lazy" onerror="this.onerror=null; this.src='${fallback}';">
+                </a>
                 <div class="admin-card-body">
                     <span class="admin-card-cat">Order: #${srv.order || 0}</span>
                     <div class="admin-card-title">${escHtml(srv.title)}</div>
@@ -1137,7 +1404,8 @@ async function loadAdminServices() {
                     <button class="btn-admin-danger" onclick="deleteServiceItem('${srv._id}')">🗑️ Delete</button>
                 </div>
             </div>
-        `).join('');
+            `;
+        }).join('');
     } catch (err) {
         container.innerHTML = '<div class="empty-state"><p>Failed to load services.</p></div>';
     }

@@ -1011,7 +1011,8 @@
             width: 100%;
             height: 180px;
             object-fit: cover;
-            background: #000;
+            background: #161e33;
+            display: block;
         }
 
         .admin-card-body {
@@ -1124,6 +1125,109 @@
 
         .btn-admin-danger:hover {
             background: rgba(239,68,68,0.25);
+        }
+
+        /* ── Image Upload & Preview UI ── */
+        .image-upload-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .upload-drop-zone {
+            border: 2px dashed rgba(245, 158, 11, 0.4);
+            background: rgba(245, 158, 11, 0.04);
+            border-radius: 8px;
+            padding: 14px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .upload-drop-zone:hover, .upload-drop-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(245, 158, 11, 0.1);
+            transform: scale(1.01);
+        }
+
+        .upload-drop-zone .icon {
+            font-size: 1.6rem;
+        }
+
+        .upload-drop-zone .zone-text {
+            font-size: 0.85rem;
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .upload-drop-zone .zone-hint {
+            font-size: 0.72rem;
+            color: var(--muted);
+        }
+
+        .image-preview-card {
+            display: none;
+            position: relative;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .image-preview-card.active {
+            display: flex;
+        }
+
+        .image-preview-card img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: #111;
+        }
+
+        .image-preview-meta {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .image-preview-meta .preview-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+            word-break: break-all;
+        }
+
+        .image-preview-meta .preview-status {
+            font-size: 0.75rem;
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .btn-remove-preview {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-remove-preview:hover {
+            background: rgba(239, 68, 68, 0.4);
         }
 
         /* ══════════════ MOBILE RESPONSIVE ADAPTATIONS ══════════════ */
@@ -1605,15 +1709,31 @@
                             </select>
                         </div>
                         <div class="form-field">
-                            <label>Image URL or Path (ફોટો પાથ)</label>
-                            <input type="text" id="galImageUrl" placeholder="e.g. assets/gate.webp or image web link" required>
+                            <label>Photo Source (ફોટો અપલોડ / સિલેક્ટ કરો)</label>
+                            <div class="image-upload-wrapper">
+                                <input type="file" id="galFileInput" accept="image/*" style="display:none">
+                                <div class="upload-drop-zone" id="galDropZone" onclick="document.getElementById('galFileInput').click()">
+                                    <span class="icon">📷</span>
+                                    <span class="zone-text">Click or Drag & Drop photo here (ફોટો પસંદ કરો)</span>
+                                    <span class="zone-hint">Supports JPG, PNG, WEBP from your device</span>
+                                </div>
+                                <div class="image-preview-card" id="galPreviewCard">
+                                    <img id="galPreviewImg" src="" alt="Preview">
+                                    <div class="image-preview-meta">
+                                        <span class="preview-name" id="galPreviewName">Image ready</span>
+                                        <span class="preview-status">✓ Photo selected</span>
+                                    </div>
+                                    <button type="button" class="btn-remove-preview" id="galRemovePreviewBtn">✕ Remove</button>
+                                </div>
+                                <input type="text" id="galImageUrl" placeholder="Or enter Image URL / Path (e.g. assets/gate.webp)">
+                            </div>
                         </div>
                     </div>
                     <div class="form-field">
                         <label>Description / Specifications (વિગત)</label>
                         <textarea id="galDesc" rows="2" placeholder="Brief project description or material used..."></textarea>
                     </div>
-                    <button type="submit" class="btn-admin-action">Upload to Live Gallery</button>
+                    <button type="submit" class="btn-admin-action" id="galSubmitBtn">Upload to Live Gallery</button>
                 </form>
             </div>
 
@@ -1647,8 +1767,24 @@
                     </div>
                     <div class="form-grid-2">
                         <div class="form-field">
-                            <label>Service Image URL / Path</label>
-                            <input type="text" id="srvImageUrl" placeholder="e.g. assets/shed.webp" required>
+                            <label>Service Image (ફોટો અપલોડ / લિંક)</label>
+                            <div class="image-upload-wrapper">
+                                <input type="file" id="srvFileInput" accept="image/*" style="display:none">
+                                <div class="upload-drop-zone" id="srvDropZone" onclick="document.getElementById('srvFileInput').click()">
+                                    <span class="icon">🖼️</span>
+                                    <span class="zone-text">Click or Drag & Drop service photo here</span>
+                                    <span class="zone-hint">Supports JPG, PNG, WEBP from your device</span>
+                                </div>
+                                <div class="image-preview-card" id="srvPreviewCard">
+                                    <img id="srvPreviewImg" src="" alt="Preview">
+                                    <div class="image-preview-meta">
+                                        <span class="preview-name" id="srvPreviewName">Service image</span>
+                                        <span class="preview-status">✓ Photo selected</span>
+                                    </div>
+                                    <button type="button" class="btn-remove-preview" id="srvRemovePreviewBtn">✕ Remove</button>
+                                </div>
+                                <input type="text" id="srvImageUrl" placeholder="Or enter assets/shed.webp or image link">
+                            </div>
                         </div>
                         <div class="form-field">
                             <label>Display Order (ક્રમ)</label>
@@ -1665,7 +1801,7 @@
                             <textarea id="srvDescGu" rows="2" placeholder="સર્વિસ વિશે વિગત..."></textarea>
                         </div>
                     </div>
-                    <button type="submit" class="btn-admin-action">Save Service</button>
+                    <button type="submit" class="btn-admin-action" id="srvSubmitBtn">Save Service</button>
                 </form>
             </div>
 
@@ -1983,6 +2119,6 @@
 <!-- Toast Notification -->
 <div id="toast"></div>
 
-<script src="admin.js?v=2.2"></script>
+<script src="admin.js?v=2.3"></script>
 </body>
 </html>
