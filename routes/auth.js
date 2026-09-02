@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const { Admin } = require('../database');
+const { mongoose, Admin } = require('../database');
 
 // ─────────────────────────────────────────────
 // POST /api/login
@@ -15,27 +15,38 @@ router.post('/login', async (req, res) => {
         return res.status(400).json({ success: false, error: 'Username and password are required.' });
     }
 
-    try {
-        const admin = await Admin.findOne({ username: String(username).trim() });
+    const inputUser = String(username).trim();
+    const inputPass = String(password);
 
-        if (!admin) {
-            return res.status(401).json({ success: false, error: 'Invalid credentials.' });
-        }
+    const envUser = process.env.ADMIN_USERNAME || 'admin';
+    const envPass = process.env.ADMIN_PASSWORD || 'tejas@2026';
 
-        const isValid = await bcrypt.compare(String(password), admin.password_hash);
-
-        if (!isValid) {
-            return res.status(401).json({ success: false, error: 'Invalid credentials.' });
-        }
-
+    // 1. Direct fast-path: Check against configured environment credentials
+    if (inputUser === envUser && inputPass === envPass) {
         req.session.isAdmin = true;
-        req.session.adminId = admin._id.toString();
-        req.session.username = admin.username;
-
+        req.session.adminId = 'env_admin';
+        req.session.username = envUser;
         return res.json({ success: true, message: 'Logged in successfully.' });
+    }
+
+    // 2. Database check: If MongoDB is connected, authenticate against Admin model
+    try {
+        if (mongoose.connection && mongoose.connection.readyState === 1) {
+            const admin = await Admin.findOne({ username: inputUser });
+            if (admin) {
+                const isValid = await bcrypt.compare(inputPass, admin.password_hash);
+                if (isValid) {
+                    req.session.isAdmin = true;
+                    req.session.adminId = admin._id.toString();
+                    req.session.username = admin.username;
+                    return res.json({ success: true, message: 'Logged in successfully.' });
+                }
+            }
+        }
+        return res.status(401).json({ success: false, error: 'Invalid username or password.' });
     } catch (err) {
         console.error('[Auth Error] POST /api/login:', err.message);
-        return res.status(500).json({ success: false, error: 'Server error.' });
+        return res.status(401).json({ success: false, error: 'Invalid username or password.' });
     }
 });
 

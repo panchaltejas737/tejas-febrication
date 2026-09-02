@@ -6,7 +6,7 @@ const session    = require('express-session');
 const cors       = require('cors');
 const path       = require('path');
 const bcrypt     = require('bcryptjs');
-const { Admin } = require('./database');
+const { Admin, seedInitialContent } = require('./database');
 const compression = require('compression');
 
 // ─── App Setup ───────────────────────────────
@@ -51,9 +51,11 @@ async function seedAdmin() {
 // ─── API Routes ───────────────────────────────
 const enquiriesRouter = require('./routes/enquiries');
 const authRouter      = require('./routes/auth');
+const contentRouter   = require('./routes/content');
 
 app.use('/api/enquiries', enquiriesRouter);
 app.use('/api/enquiry',   enquiriesRouter); // Support singular path from client script
+app.use('/api/content',   contentRouter);
 app.use('/api',           authRouter);
 
 // ─── Caching configuration for Static Files ───
@@ -125,6 +127,7 @@ app.listen(PORT, () => {
     console.log('└─────────────────────────────────────────────┘');
     console.log('');
 
-    // Seed admin account in background
+    // Seed admin account & initial dynamic content in background
     seedAdmin();
+    seedInitialContent();
 });

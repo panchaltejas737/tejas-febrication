@@ -1,7 +1,8 @@
 // routes/enquiries.js — API routes for customer enquiries using MongoDB Mongoose
 const express = require('express');
 const router = express.Router();
-const { Enquiry } = require('../database');
+const { mongoose, Enquiry } = require('../database');
+const { sendNewEnquiryNotification, sendCustomerConfirmation, sendDirectEmail } = require('../email');
 
 // Middleware: require admin session for protected routes
 function requireAdmin(req, res, next) {
@@ -56,6 +57,17 @@ router.post('/', async (req, res) => {
         });
         const saved = await enquiry.save();
 
+        // ── Dispatch Email Notifications (Non-blocking background) ──
+        sendNewEnquiryNotification(saved).catch(err => {
+            console.error('[Email Notification Error]:', err.message);
+        });
+
+        if (saved.email) {
+            sendCustomerConfirmation(saved).catch(err => {
+                console.error('[Customer Confirmation Email Error]:', err.message);
+            });
+        }
+
         return res.status(201).json({
             success: true,
             message: 'Enquiry saved successfully.',
@@ -72,6 +84,10 @@ router.post('/', async (req, res) => {
 // List all enquiries with optional filtering
 // ─────────────────────────────────────────────
 router.get('/', requireAdmin, async (req, res) => {
+    if (mongoose.connection && mongoose.connection.readyState !== 1) {
+        return res.json({ success: true, total: 0, new_count: 0, enquiries: [] });
+    }
+
     const { status, limit = 100, offset = 0 } = req.query;
     const query = {};
 
@@ -171,14 +187,31 @@ router.post('/:id/call', requireAdmin, async (req, res) => {
 
 // ─────────────────────────────────────────────
 // POST /api/enquiries/:id/email  (ADMIN ONLY)
-// Log an email attempt to this customer
+// Log or send an email to this customer
 // ─────────────────────────────────────────────
 router.post('/:id/email', requireAdmin, async (req, res) => {
     const { id } = req.params;
+    const { subject, message, body } = req.body || {};
+    const emailBody = message || body;
+
     try {
         const enquiry = await Enquiry.findById(id);
         if (!enquiry) {
             return res.status(404).json({ success: false, error: 'Enquiry not found.' });
+        }
+
+        let emailSent = false;
+        if (enquiry.email && (subject || emailBody)) {
+            try {
+                await sendDirectEmail({
+                    to: enquiry.email,
+                    subject: subject || 'Update regarding your inquiry - Tejas Fabrication',
+                    text: emailBody || 'Hello, thank you for reaching out to Tejas Fabrication.'
+                });
+                emailSent = true;
+            } catch (mailErr) {
+                console.warn('[Direct Mail Notice]:', mailErr.message);
+            }
         }
 
         enquiry.emailed_at = new Date();
@@ -187,7 +220,13 @@ router.post('/:id/email', requireAdmin, async (req, res) => {
         }
         await enquiry.save();
 
-        return res.json({ success: true, message: 'Email logged.', emailed_at: enquiry.emailed_at, status: enquiry.status });
+        return res.json({
+            success: true,
+            message: emailSent ? 'Email sent and logged successfully.' : 'Email logged.',
+            emailed_at: enquiry.emailed_at,
+            status: enquiry.status,
+            email_sent: emailSent
+        });
     } catch (err) {
         console.error('[DB Error] POST /api/enquiries/:id/email:', err.message);
         return res.status(500).json({ success: false, error: 'Server error.' });

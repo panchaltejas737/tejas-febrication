@@ -243,6 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initGalleryLightbox();
     initFAQAccordion();
     initEstimatorWizard();
+    loadDynamicContent();
 });
 
 // Switch Language Logic
@@ -252,6 +253,7 @@ langToggleBtn.addEventListener('click', () => {
     
     updateLanguageUI();
     updateTextTranslations();
+    renderAllDynamic();
 });
 
 function updateLanguageUI() {
@@ -1157,5 +1159,175 @@ Object.assign(translations.gu, {
     faq_q4: "પતરાના શેડ માટે કયા કયા મટીરીયલ ઉપલબ્ધ છે?",
     faq_a4: "અમે કલર-કોટેડ પતરાં, પારદર્શક પોલીકાર્બોનેટ શીટ્સ અને મજબૂત જી.આઈ. પાઇપ સ્ટ્રક્ચર્સ ફિટ કરી આપીએ છીએ."
 });
+
+// ══════════════════════════════════════════════════════════════
+// DYNAMIC FRONTEND HYDRATION (Gallery, Services, Reviews, Settings)
+// ══════════════════════════════════════════════════════════════
+
+let liveSiteData = {
+    gallery: [],
+    services: [],
+    reviews: [],
+    settings: {}
+};
+
+async function loadDynamicContent() {
+    try {
+        const res = await fetch('/api/content/all');
+        if (!res.ok) return;
+        const result = await res.json();
+        if (!result.success || !result.data) return;
+
+        liveSiteData = result.data;
+        renderAllDynamic();
+    } catch (err) {
+        console.log('[Dynamic Content] Using offline static template.');
+    }
+}
+
+function renderAllDynamic() {
+    if (!liveSiteData) return;
+
+    // 1. Settings & Contact Information
+    if (liveSiteData.settings && Object.keys(liveSiteData.settings).length > 0) {
+        applyLiveSettings(liveSiteData.settings);
+    }
+
+    // 2. Services
+    if (liveSiteData.services && liveSiteData.services.length > 0) {
+        renderLiveServices(liveSiteData.services);
+    }
+
+    // 3. Gallery
+    if (liveSiteData.gallery && liveSiteData.gallery.length > 0) {
+        renderLiveGallery(liveSiteData.gallery);
+    }
+
+    // 4. Reviews
+    if (liveSiteData.reviews && liveSiteData.reviews.length > 0) {
+        renderLiveReviews(liveSiteData.reviews);
+    }
+}
+
+function applyLiveSettings(settings) {
+    if (settings.phone) {
+        document.querySelectorAll('a[href^="tel:"]').forEach(el => {
+            el.href = `tel:${settings.phone.replace(/[^0-9+]/g, '')}`;
+            const textSpan = el.querySelector('[data-key="nav_call_btn"]') || el.querySelector('span');
+            if (textSpan && textSpan.getAttribute('data-key') === 'nav_call_btn') {
+                textSpan.innerText = settings.phone;
+            }
+        });
+    }
+
+    if (settings.whatsapp) {
+        const greeting = currentLanguage === 'gu'
+            ? encodeURIComponent("નમસ્તે તેજસ ફેબ્રિકેશન, હું લોખંડ/સ્ટીલના ફેબ્રિકેશન કામની પૂછપરછ માટે સંપર્ક કરી રહ્યો છું.")
+            : encodeURIComponent("Hello Tejas Fabrication, I am interested in your metal fabrication services.");
+        const waUrl = `https://wa.me/${settings.whatsapp}?text=${greeting}`;
+        if (heroWhatsAppBtn) heroWhatsAppBtn.href = waUrl;
+        if (whatsappFloat) whatsappFloat.href = waUrl;
+    }
+
+    if (settings.address && currentLanguage === 'en') {
+        const addrEl = document.querySelector('[data-key="contact_addr_val"]');
+        if (addrEl) addrEl.innerText = settings.address;
+    } else if (settings.address_gu && currentLanguage === 'gu') {
+        const addrEl = document.querySelector('[data-key="contact_addr_val"]');
+        if (addrEl) addrEl.innerText = settings.address_gu;
+    }
+
+    // Update live pricing rates if available
+    if (settings.estimator_rates && typeof pricingRates !== 'undefined') {
+        const r = settings.estimator_rates;
+        if (r.gates_standard && pricingRates.gate) pricingRates.gate.standard = [Math.round(r.gates_standard * 0.9), Math.round(r.gates_standard * 1.1)];
+        if (r.gates_designer && pricingRates.gate) pricingRates.gate.designer = [Math.round(r.gates_designer * 0.9), Math.round(r.gates_designer * 1.1)];
+        if (r.gates_ss && pricingRates.gate) pricingRates.gate.stainless = [Math.round(r.gates_ss * 0.9), Math.round(r.gates_ss * 1.1)];
+
+        if (r.grills_standard && pricingRates.grill) pricingRates.grill.standard = [Math.round(r.grills_standard * 0.9), Math.round(r.grills_standard * 1.1)];
+        if (r.grills_designer && pricingRates.grill) pricingRates.grill.designer = [Math.round(r.grills_designer * 0.9), Math.round(r.grills_designer * 1.1)];
+        if (r.grills_ss && pricingRates.grill) pricingRates.grill.stainless = [Math.round(r.grills_ss * 0.9), Math.round(r.grills_ss * 1.1)];
+
+        if (r.railings_standard && pricingRates.railing) pricingRates.railing.standard = [Math.round(r.railings_standard * 0.9), Math.round(r.railings_standard * 1.1)];
+        if (r.railings_designer && pricingRates.railing) pricingRates.railing.designer = [Math.round(r.railings_designer * 0.9), Math.round(r.railings_designer * 1.1)];
+        if (r.railings_ss && pricingRates.railing) pricingRates.railing.stainless = [Math.round(r.railings_ss * 0.9), Math.round(r.railings_ss * 1.1)];
+
+        if (r.sheds_standard && pricingRates.shed) pricingRates.shed.standard = [Math.round(r.sheds_standard * 0.9), Math.round(r.sheds_standard * 1.1)];
+        if (r.sheds_designer && pricingRates.shed) pricingRates.shed.designer = [Math.round(r.sheds_designer * 0.9), Math.round(r.sheds_designer * 1.1)];
+        if (r.sheds_ss && pricingRates.shed) pricingRates.shed.stainless = [Math.round(r.sheds_ss * 0.9), Math.round(r.sheds_ss * 1.1)];
+
+        if (typeof calculateEstimate === 'function') calculateEstimate();
+    }
+}
+
+function renderLiveServices(services) {
+    const grid = document.querySelector('.service-grid');
+    if (!grid) return;
+
+    grid.innerHTML = services.map(srv => {
+        const title = (currentLanguage === 'gu' && srv.title_gu) ? srv.title_gu : srv.title;
+        const desc = (currentLanguage === 'gu' && srv.description_gu) ? srv.description_gu : srv.description;
+        const enquireText = currentLanguage === 'gu' ? "પૂછપરછ કરો" : "Enquire Now";
+        return `
+            <div class="service-card reveal visible" style="opacity: 1;">
+                <div class="service-img-wrapper">
+                    <img src="${srv.image_url}" alt="${title}" class="service-img" loading="lazy" onerror="this.src='assets/hero.webp'">
+                    <div class="service-overlay"></div>
+                </div>
+                <div class="service-body">
+                    <h3 class="service-title">${title}</h3>
+                    <p class="service-text">${desc}</p>
+                    <a href="#contact" class="service-link">
+                        <span>${enquireText}</span>
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                            <path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-8.29-1.42 1.42 5.43 5.43H5v2z"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderLiveGallery(items) {
+    const grid = document.querySelector('.gallery-grid');
+    if (!grid) return;
+
+    grid.innerHTML = items.map(item => {
+        const title = (currentLanguage === 'gu' && item.title_gu) ? item.title_gu : item.title;
+        return `
+            <div class="gallery-item" data-category="${item.category}" style="opacity: 1;">
+                <img src="${item.image_url}" alt="${title}" loading="lazy" onerror="this.src='assets/hero.webp'">
+                <div class="gallery-item-info">
+                    <span class="gallery-item-cat">${item.category.toUpperCase()}</span>
+                    <h4 class="gallery-item-title">${title}</h4>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Re-initialize lightbox listeners for new gallery items
+    if (typeof initGalleryLightbox === 'function') {
+        initGalleryLightbox();
+    }
+}
+
+function renderLiveReviews(reviews) {
+    const carousel = document.querySelector('.testimonials-carousel');
+    if (!carousel) return;
+
+    carousel.innerHTML = reviews.map(rev => {
+        const comment = (currentLanguage === 'gu' && rev.comment_gu) ? rev.comment_gu : rev.comment;
+        const stars = '★'.repeat(rev.rating || 5);
+        return `
+            <div class="testimonial-card reveal visible" style="opacity: 1;">
+                <div class="rating-stars">${stars}</div>
+                <p class="testi-comment">"${comment}"</p>
+                <div class="testi-author">${rev.client_name}${rev.location ? `, ${rev.location}` : ''}</div>
+            </div>
+        `;
+    }).join('');
+}
+
 
 

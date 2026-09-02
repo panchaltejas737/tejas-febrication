@@ -201,6 +201,7 @@ const translations = {
 // ─── Init ─────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
     checkSession();
+    initDynamicCMS();
 
     // Login listeners
     document.getElementById('loginPassword').addEventListener('keydown', (e) => {
@@ -939,4 +940,377 @@ function showToast(msg, type = 'success') {
     toast.className = `show ${type}`;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ══════════════════════════════════════════════════════════════
+// DYNAMIC CMS SYSTEM (Gallery, Services, Reviews, Settings)
+// ══════════════════════════════════════════════════════════════
+
+function initDynamicCMS() {
+    // 1. Tab Switching
+    document.querySelectorAll('.admin-tabs-nav .tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.dataset.tab;
+            if (!targetId) return;
+
+            document.querySelectorAll('.admin-tabs-nav .tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            const targetPane = document.getElementById(targetId);
+            if (targetPane) targetPane.classList.add('active');
+
+            // Lazy load tab data
+            if (targetId === 'tabGallery') loadAdminGallery();
+            if (targetId === 'tabServices') loadAdminServices();
+            if (targetId === 'tabReviews') loadAdminReviews();
+            if (targetId === 'tabSettings') loadAdminSettings();
+        });
+    });
+
+    // 2. Setup Forms & Refresh buttons
+    setupGalleryHandlers();
+    setupServicesHandlers();
+    setupReviewsHandlers();
+    setupSettingsHandlers();
+}
+
+// ─── GALLERY HANDLERS ─────────────────────────────────────────
+function setupGalleryHandlers() {
+    const form = document.getElementById('addGalleryForm');
+    const refreshBtn = document.getElementById('refreshGalleryBtn');
+
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('galTitle').value.trim();
+            const title_gu = document.getElementById('galTitleGu').value.trim();
+            const category = document.getElementById('galCategory').value;
+            const image_url = document.getElementById('galImageUrl').value.trim();
+            const description = document.getElementById('galDesc').value.trim();
+
+            try {
+                const res = await fetch('/api/content/gallery', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, title_gu, category, image_url, description })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('✅ Photo added to live gallery!', 'success');
+                    form.reset();
+                    loadAdminGallery();
+                } else {
+                    showToast('❌ ' + (data.error || 'Failed to add photo'), 'error');
+                }
+            } catch (err) {
+                showToast('❌ Network error', 'error');
+            }
+        });
+    }
+
+    if (refreshBtn) refreshBtn.addEventListener('click', loadAdminGallery);
+}
+
+async function loadAdminGallery() {
+    const container = document.getElementById('adminGalleryGrid');
+    if (!container) return;
+    container.innerHTML = '<div class="spinner"></div>';
+
+    try {
+        const res = await fetch('/api/content/gallery');
+        const data = await res.json();
+        if (!data.success || !data.items || data.items.length === 0) {
+            container.innerHTML = '<div class="empty-state"><div class="icon">🖼️</div><p>No gallery photos found. Add your first photo above!</p></div>';
+            return;
+        }
+
+        container.innerHTML = data.items.map(item => `
+            <div class="admin-card-item">
+                <img src="${escHtml(item.image_url)}" alt="${escHtml(item.title)}" class="admin-card-img" onerror="this.src='assets/hero.webp'">
+                <div class="admin-card-body">
+                    <span class="admin-card-cat">${escHtml(item.category)}</span>
+                    <div class="admin-card-title">${escHtml(item.title)}</div>
+                    ${item.title_gu ? `<div style="font-size:0.8rem;color:var(--primary);">${escHtml(item.title_gu)}</div>` : ''}
+                    <div class="admin-card-desc">${escHtml(item.description || 'No description')}</div>
+                </div>
+                <div class="admin-card-footer">
+                    <button class="btn-admin-danger" onclick="deleteGalleryItem('${item._id}')">🗑️ Delete</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        container.innerHTML = '<div class="empty-state"><p>Failed to load gallery photos.</p></div>';
+    }
+}
+
+window.deleteGalleryItem = async function(id) {
+    if (!confirm('Are you sure you want to delete this photo from the gallery?')) return;
+    try {
+        const res = await fetch(`/api/content/gallery/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            showToast('✅ Photo deleted', 'success');
+            loadAdminGallery();
+        } else {
+            showToast('❌ ' + (data.error || 'Failed to delete'), 'error');
+        }
+    } catch (err) {
+        showToast('❌ Network error', 'error');
+    }
+};
+
+// ─── SERVICES HANDLERS ────────────────────────────────────────
+function setupServicesHandlers() {
+    const form = document.getElementById('addServiceForm');
+    const refreshBtn = document.getElementById('refreshServicesBtn');
+
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('srvTitle').value.trim();
+            const title_gu = document.getElementById('srvTitleGu').value.trim();
+            const image_url = document.getElementById('srvImageUrl').value.trim();
+            const order = parseInt(document.getElementById('srvOrder').value) || 1;
+            const description = document.getElementById('srvDesc').value.trim();
+            const description_gu = document.getElementById('srvDescGu').value.trim();
+
+            try {
+                const res = await fetch('/api/content/services', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, title_gu, image_url, order, description, description_gu })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('✅ Service saved!', 'success');
+                    form.reset();
+                    loadAdminServices();
+                } else {
+                    showToast('❌ ' + (data.error || 'Failed to save service'), 'error');
+                }
+            } catch (err) {
+                showToast('❌ Network error', 'error');
+            }
+        });
+    }
+
+    if (refreshBtn) refreshBtn.addEventListener('click', loadAdminServices);
+}
+
+async function loadAdminServices() {
+    const container = document.getElementById('adminServicesGrid');
+    if (!container) return;
+    container.innerHTML = '<div class="spinner"></div>';
+
+    try {
+        const res = await fetch('/api/content/services');
+        const data = await res.json();
+        if (!data.success || !data.services || data.services.length === 0) {
+            container.innerHTML = '<div class="empty-state"><div class="icon">⚙️</div><p>No services found.</p></div>';
+            return;
+        }
+
+        container.innerHTML = data.services.map(srv => `
+            <div class="admin-card-item">
+                <img src="${escHtml(srv.image_url)}" alt="${escHtml(srv.title)}" class="admin-card-img" onerror="this.src='assets/hero.webp'">
+                <div class="admin-card-body">
+                    <span class="admin-card-cat">Order: #${srv.order || 0}</span>
+                    <div class="admin-card-title">${escHtml(srv.title)}</div>
+                    ${srv.title_gu ? `<div style="font-size:0.8rem;color:var(--primary);">${escHtml(srv.title_gu)}</div>` : ''}
+                    <div class="admin-card-desc">${escHtml(srv.description)}</div>
+                </div>
+                <div class="admin-card-footer">
+                    <button class="btn-admin-danger" onclick="deleteServiceItem('${srv._id}')">🗑️ Delete</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        container.innerHTML = '<div class="empty-state"><p>Failed to load services.</p></div>';
+    }
+}
+
+window.deleteServiceItem = async function(id) {
+    if (!confirm('Are you sure you want to delete this service?')) return;
+    try {
+        const res = await fetch(`/api/content/services/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            showToast('✅ Service deleted', 'success');
+            loadAdminServices();
+        } else {
+            showToast('❌ ' + (data.error || 'Failed to delete'), 'error');
+        }
+    } catch (err) {
+        showToast('❌ Network error', 'error');
+    }
+};
+
+// ─── REVIEWS HANDLERS ─────────────────────────────────────────
+function setupReviewsHandlers() {
+    const form = document.getElementById('addReviewForm');
+    const refreshBtn = document.getElementById('refreshReviewsBtn');
+
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const client_name = document.getElementById('revClientName').value.trim();
+            const location = document.getElementById('revLocation').value.trim();
+            const rating = parseInt(document.getElementById('revRating').value) || 5;
+            const is_active = document.getElementById('revActive').value === 'true';
+            const comment = document.getElementById('revComment').value.trim();
+            const comment_gu = document.getElementById('revCommentGu').value.trim();
+
+            try {
+                const res = await fetch('/api/content/reviews', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ client_name, location, rating, is_active, comment, comment_gu })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('✅ Review added!', 'success');
+                    form.reset();
+                    loadAdminReviews();
+                } else {
+                    showToast('❌ ' + (data.error || 'Failed to add review'), 'error');
+                }
+            } catch (err) {
+                showToast('❌ Network error', 'error');
+            }
+        });
+    }
+
+    if (refreshBtn) refreshBtn.addEventListener('click', loadAdminReviews);
+}
+
+async function loadAdminReviews() {
+    const container = document.getElementById('adminReviewsGrid');
+    if (!container) return;
+    container.innerHTML = '<div class="spinner"></div>';
+
+    try {
+        const res = await fetch('/api/content/reviews');
+        const data = await res.json();
+        if (!data.success || !data.reviews || data.reviews.length === 0) {
+            container.innerHTML = '<div class="empty-state"><div class="icon">⭐</div><p>No customer reviews yet.</p></div>';
+            return;
+        }
+
+        container.innerHTML = data.reviews.map(rev => `
+            <div class="admin-card-item">
+                <div class="admin-card-body" style="padding:20px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span class="admin-card-cat" style="background:${rev.is_active ? 'rgba(16,185,129,0.15);color:var(--green);' : 'rgba(239,68,68,0.15);color:var(--red);'}">
+                            ${rev.is_active ? 'Active' : 'Hidden'}
+                        </span>
+                        <span style="color:var(--primary);font-size:1.1rem;">${'⭐'.repeat(rev.rating || 5)}</span>
+                    </div>
+                    <div class="admin-card-title" style="margin-top:10px;">${escHtml(rev.client_name)} <span style="font-size:0.8rem;color:var(--muted);font-weight:400;">(${escHtml(rev.location || 'Gujarat')})</span></div>
+                    <div class="admin-card-desc" style="font-style:italic;">"${escHtml(rev.comment)}"</div>
+                    ${rev.comment_gu ? `<div style="font-size:0.8rem;color:var(--muted);margin-top:4px;">"${escHtml(rev.comment_gu)}"</div>` : ''}
+                </div>
+                <div class="admin-card-footer">
+                    <button class="btn-admin-danger" onclick="deleteReviewItem('${rev._id}')">🗑️ Delete</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        container.innerHTML = '<div class="empty-state"><p>Failed to load reviews.</p></div>';
+    }
+}
+
+window.deleteReviewItem = async function(id) {
+    if (!confirm('Are you sure you want to delete this review?')) return;
+    try {
+        const res = await fetch(`/api/content/reviews/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            showToast('✅ Review deleted', 'success');
+            loadAdminReviews();
+        } else {
+            showToast('❌ ' + (data.error || 'Failed to delete'), 'error');
+        }
+    } catch (err) {
+        showToast('❌ Network error', 'error');
+    }
+};
+
+// ─── SETTINGS HANDLERS ────────────────────────────────────────
+function setupSettingsHandlers() {
+    const form = document.getElementById('siteSettingsForm');
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const phone = document.getElementById('setPhone').value.trim();
+            const whatsapp = document.getElementById('setWhatsapp').value.trim();
+            const email = document.getElementById('setEmail').value.trim();
+            const address = document.getElementById('setAddress').value.trim();
+            const address_gu = document.getElementById('setAddressGu').value.trim();
+
+            const estimator_rates = {
+                gates_standard: parseFloat(document.getElementById('rate_gates_std').value) || 380,
+                gates_designer: parseFloat(document.getElementById('rate_gates_des').value) || 550,
+                gates_ss: parseFloat(document.getElementById('rate_gates_ss').value) || 850,
+                grills_standard: parseFloat(document.getElementById('rate_grills_std').value) || 240,
+                grills_designer: parseFloat(document.getElementById('rate_grills_des').value) || 380,
+                grills_ss: parseFloat(document.getElementById('rate_grills_ss').value) || 650,
+                railings_standard: parseFloat(document.getElementById('rate_railings_std').value) || 320,
+                railings_designer: parseFloat(document.getElementById('rate_railings_des').value) || 480,
+                railings_ss: parseFloat(document.getElementById('rate_railings_ss').value) || 750,
+                sheds_standard: parseFloat(document.getElementById('rate_sheds_std').value) || 280,
+                sheds_designer: parseFloat(document.getElementById('rate_sheds_des').value) || 420,
+                sheds_ss: parseFloat(document.getElementById('rate_sheds_ss').value) || 600
+            };
+
+            try {
+                const res = await fetch('/api/content/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, whatsapp, email, address, address_gu, estimator_rates })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('✅ Settings & Pricing saved successfully!', 'success');
+                } else {
+                    showToast('❌ ' + (data.error || 'Failed to save settings'), 'error');
+                }
+            } catch (err) {
+                showToast('❌ Network error', 'error');
+            }
+        });
+    }
+}
+
+async function loadAdminSettings() {
+    try {
+        const res = await fetch('/api/content/settings');
+        const data = await res.json();
+        if (!data.success || !data.settings) return;
+
+        const s = data.settings;
+        if (s.phone) document.getElementById('setPhone').value = s.phone;
+        if (s.whatsapp) document.getElementById('setWhatsapp').value = s.whatsapp;
+        if (s.email) document.getElementById('setEmail').value = s.email;
+        if (s.address) document.getElementById('setAddress').value = s.address;
+        if (s.address_gu) document.getElementById('setAddressGu').value = s.address_gu;
+
+        if (s.estimator_rates) {
+            const r = s.estimator_rates;
+            if (r.gates_standard) document.getElementById('rate_gates_std').value = r.gates_standard;
+            if (r.gates_designer) document.getElementById('rate_gates_des').value = r.gates_designer;
+            if (r.gates_ss) document.getElementById('rate_gates_ss').value = r.gates_ss;
+            if (r.grills_standard) document.getElementById('rate_grills_std').value = r.grills_standard;
+            if (r.grills_designer) document.getElementById('rate_grills_des').value = r.grills_designer;
+            if (r.grills_ss) document.getElementById('rate_grills_ss').value = r.grills_ss;
+            if (r.railings_standard) document.getElementById('rate_railings_std').value = r.railings_standard;
+            if (r.railings_designer) document.getElementById('rate_railings_des').value = r.railings_designer;
+            if (r.railings_ss) document.getElementById('rate_railings_ss').value = r.railings_ss;
+            if (r.sheds_standard) document.getElementById('rate_sheds_std').value = r.sheds_standard;
+            if (r.sheds_designer) document.getElementById('rate_sheds_des').value = r.sheds_designer;
+            if (r.sheds_ss) document.getElementById('rate_sheds_ss').value = r.sheds_ss;
+        }
+    } catch (err) {
+        showToast('❌ Could not load current settings', 'error');
+    }
 }
